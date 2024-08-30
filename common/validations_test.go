@@ -1,4 +1,4 @@
-package validations
+package common
 
 import (
 	"net/url"

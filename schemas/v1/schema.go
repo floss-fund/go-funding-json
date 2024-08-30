@@ -1,11 +1,15 @@
 package v1
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 
-	"github.com/floss-fund/go-funding-json/validations"
+	"github.com/floss-fund/go-funding-json/common"
 	"golang.org/x/mod/semver"
 )
 
@@ -21,6 +25,7 @@ const (
 // Schema represents the schema+parser+validator for a particular version.
 type Schema struct {
 	opt *Opt
+	hc  *common.HTTPClient
 }
 
 type Opt struct {
@@ -37,10 +42,48 @@ type Opt struct {
 }
 
 // New returns a new instance of Schema.
-func New(opt *Opt) *Schema {
+func New(opt *Opt, hOpt common.HTTPOpt, l *log.Logger) *Schema {
+	hc := common.NewHTTPClient(hOpt, l)
+
 	return &Schema{
 		opt: opt,
+		hc:  hc,
 	}
+}
+
+// ParseManifest parses a given JSON body, validates it, and returns the manifest.
+func (s *Schema) ParseManifest(b []byte, manifestURL string, checkProvenance bool) (Manifest, error) {
+	var m Manifest
+	if err := m.UnmarshalJSON(b); err != nil {
+		return m, fmt.Errorf("error parsing JSON body: %v", err)
+	}
+
+	// Validate the manifest's schema.
+	m.URL = manifestURL
+	m.Body = json.RawMessage(b)
+	if v, err := s.Validate(m); err != nil {
+		return v, err
+	} else {
+		m = v
+	}
+
+	// Establish the provenance of all URLs mentioned in the manifest.
+	if checkProvenance {
+		if err := s.CheckProvenance(m.Entity.WebpageURL, manifestURL); err != nil {
+			return m, err
+		}
+
+		for _, o := range m.Projects {
+			if err := s.CheckProvenance(o.WebpageURL, manifestURL); err != nil {
+				return m, err
+			}
+			if err := s.CheckProvenance(o.RepositoryUrl, manifestURL); err != nil {
+				return m, err
+			}
+		}
+	}
+
+	return m, nil
 }
 
 // Validate validates a given manifest against its schema.
@@ -49,7 +92,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 		return m, fmt.Errorf("version should be %s", MajorVersion)
 	}
 
-	mURL, err := validations.IsURL("manifest URL", m.URL, 1024)
+	mURL, err := common.IsURL("manifest URL", m.URL, 1024)
 	if err != nil {
 		return m, err
 	}
@@ -79,7 +122,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	}
 
 	// Funding plans.
-	if err := validations.InRange[int]("plans", len(m.Funding.Plans), 1, 30); err != nil {
+	if err := common.InRange[int]("plans", len(m.Funding.Plans), 1, 30); err != nil {
 		return m, err
 	}
 	for n, o := range m.Funding.Plans {
@@ -90,7 +133,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	}
 
 	// History.
-	if err := validations.InRange[int]("history", len(m.Funding.Plans), 0, 50); err != nil {
+	if err := common.InRange[int]("history", len(m.Funding.Plans), 0, 50); err != nil {
 		return m, err
 	}
 	for n, o := range m.Funding.History {
@@ -104,27 +147,27 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 }
 
 func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
-	if err := validations.InList("entity.type", o.Type, EntityTypes); err != nil {
+	if err := common.InList("entity.type", o.Type, EntityTypes); err != nil {
 		return o, err
 	}
 
-	if err := validations.InList("entity.role", o.Role, EntityRoles); err != nil {
+	if err := common.InList("entity.role", o.Role, EntityRoles); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[int]("entity.name", len(o.Name), 2, 128); err != nil {
+	if err := common.InRange[int]("entity.name", len(o.Name), 2, 128); err != nil {
 		return o, err
 	}
 
-	if err := validations.IsEmail("entity.email", o.Email, 128); err != nil {
+	if err := common.IsEmail("entity.email", o.Email, 128); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[int]("entity.telephone", len(o.Telephone), 0, 24); err != nil {
+	if err := common.InRange[int]("entity.telephone", len(o.Telephone), 0, 24); err != nil {
 		return o, err
 	}
 
-	if tgURL, wkURL, err := validations.WellKnownURL("entity.webpageUrl", manifest, o.WebpageURL.URL, o.WebpageURL.WellKnown, s.opt.WellKnownURI, 1024); err != nil {
+	if tgURL, wkURL, err := common.WellKnownURL("entity.webpageUrl", manifest, o.WebpageURL.URL, o.WebpageURL.WellKnown, s.opt.WellKnownURI, 1024); err != nil {
 		return o, err
 	} else {
 		o.WebpageURL.URLobj = tgURL
@@ -135,22 +178,22 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 }
 
 func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, error) {
-	if err := validations.InRange[int](fmt.Sprintf("projects[%d].name", n), len(o.Name), 1, 256); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].name", n), len(o.Name), 1, 256); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 5, 1024); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 5, 1024); err != nil {
 		return o, err
 	}
 
-	if tgURL, wkURL, err := validations.WellKnownURL(fmt.Sprintf("projects[%d].webpageUrl", n), manifest, o.WebpageURL.URL, o.WebpageURL.WellKnown, s.opt.WellKnownURI, 1024); err != nil {
+	if tgURL, wkURL, err := common.WellKnownURL(fmt.Sprintf("projects[%d].webpageUrl", n), manifest, o.WebpageURL.URL, o.WebpageURL.WellKnown, s.opt.WellKnownURI, 1024); err != nil {
 		return o, err
 	} else {
 		o.WebpageURL.URLobj = tgURL
 		o.WebpageURL.WellKnownObj = wkURL
 	}
 
-	if tgURL, wkURL, err := validations.WellKnownURL(fmt.Sprintf("projects[%d].repositoryUrl", n), manifest, o.RepositoryUrl.URL, o.RepositoryUrl.WellKnown, s.opt.WellKnownURI, 1024); err != nil {
+	if tgURL, wkURL, err := common.WellKnownURL(fmt.Sprintf("projects[%d].repositoryUrl", n), manifest, o.RepositoryUrl.URL, o.RepositoryUrl.WellKnown, s.opt.WellKnownURI, 1024); err != nil {
 		return o, err
 	} else {
 		o.RepositoryUrl.URLobj = tgURL
@@ -159,38 +202,38 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 
 	// License.
 	licenseTag := fmt.Sprintf("projects[%d].license", n)
-	if err := validations.InRange[int](licenseTag, len(o.License), 2, 64); err != nil {
+	if err := common.InRange[int](licenseTag, len(o.License), 2, 64); err != nil {
 		return o, err
 	}
 	if strings.HasPrefix(o.License, "spdx:") {
-		if err := validations.InMap(licenseTag, "spdx license list", strings.TrimPrefix(o.License, "spdx:"), s.opt.Licenses); err != nil {
+		if err := common.InMap(licenseTag, "spdx license list", strings.TrimPrefix(o.License, "spdx:"), s.opt.Licenses); err != nil {
 			return o, err
 		}
 	}
 
 	// Frameworks.
-	if err := validations.InRange[int](fmt.Sprintf("projects[%d].frameworks", n), len(o.Frameworks), 0, 5); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].frameworks", n), len(o.Frameworks), 0, 5); err != nil {
 		return o, err
 	}
 	for i, f := range o.Frameworks {
 		fTag := fmt.Sprintf("projects[%d].frameworks[%d]", n, i)
-		if err := validations.InRange[int](fTag, len(f), 2, 64); err != nil {
+		if err := common.InRange[int](fTag, len(f), 2, 64); err != nil {
 			return o, err
 		}
 
 		if strings.HasPrefix(f, "lang:") {
-			if err := validations.InMap(fTag, "default programming language list", strings.TrimPrefix(f, "lang:"), s.opt.ProgrammingLanguages); err != nil {
+			if err := common.InMap(fTag, "default programming language list", strings.TrimPrefix(f, "lang:"), s.opt.ProgrammingLanguages); err != nil {
 				return o, err
 			}
 		}
 	}
 
 	// Tags.
-	if err := validations.InRange[int](fmt.Sprintf("projects[%d].tags", n), len(o.Tags), 1, 10); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].tags", n), len(o.Tags), 1, 10); err != nil {
 		return o, err
 	}
 	for i, t := range o.Tags {
-		if err := validations.IsTag(fmt.Sprintf("projects[%d].tags[%d]", n, i), t, 2, 32); err != nil {
+		if err := common.IsTag(fmt.Sprintf("projects[%d].tags[%d]", n, i), t, 2, 32); err != nil {
 			return o, err
 		}
 	}
@@ -199,19 +242,19 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 }
 
 func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
-	if err := validations.IsID(fmt.Sprintf("channels[%d].id", n), o.ID, 3, 32); err != nil {
+	if err := common.IsID(fmt.Sprintf("channels[%d].id", n), o.ID, 3, 32); err != nil {
 		return o, err
 	}
 
-	if err := validations.InList(fmt.Sprintf("channels[%d].type", n), o.Type, ChannelTypes); err != nil {
+	if err := common.InList(fmt.Sprintf("channels[%d].type", n), o.Type, ChannelTypes); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[int](fmt.Sprintf("channels[%d].address", n), len(o.Address), 0, 128); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%d].address", n), len(o.Address), 0, 128); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[int](fmt.Sprintf("channels[%d].description", n), len(o.Description), 0, 1024); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%d].description", n), len(o.Description), 0, 1024); err != nil {
 		return o, err
 	}
 
@@ -219,31 +262,31 @@ func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
 }
 
 func (s *Schema) ValidatePlan(o Plan, n int, channelIDs map[string]struct{}) (Plan, error) {
-	if err := validations.IsID(fmt.Sprintf("plans[%d].id", n), o.ID, 3, 32); err != nil {
+	if err := common.IsID(fmt.Sprintf("plans[%d].id", n), o.ID, 3, 32); err != nil {
 		return o, err
 	}
 
-	if err := validations.InList(fmt.Sprintf("plans[%d].status", n), o.Status, PlanStatuses); err != nil {
+	if err := common.InList(fmt.Sprintf("plans[%d].status", n), o.Status, PlanStatuses); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[int](fmt.Sprintf("plans[%d].name", n), len(o.Name), 3, 128); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("plans[%d].name", n), len(o.Name), 3, 128); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[int](fmt.Sprintf("plans[%d].description", n), len(o.Description), 0, 1024); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("plans[%d].description", n), len(o.Description), 0, 1024); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[float64](fmt.Sprintf("plans[%d].amount", n), o.Amount, 0, 1000000000); err != nil {
+	if err := common.InRange[float64](fmt.Sprintf("plans[%d].amount", n), o.Amount, 0, 1000000000); err != nil {
 		return o, err
 	}
 
-	if err := validations.InMap(fmt.Sprintf("plans[%d].currency", n), "currencies list", o.Currency, s.opt.Currencies); err != nil {
+	if err := common.InMap(fmt.Sprintf("plans[%d].currency", n), "currencies list", o.Currency, s.opt.Currencies); err != nil {
 		return o, err
 	}
 
-	if err := validations.InList(fmt.Sprintf("plans[%d].frequency", n), o.Frequency, PlanFrequencies); err != nil {
+	if err := common.InList(fmt.Sprintf("plans[%d].frequency", n), o.Frequency, PlanFrequencies); err != nil {
 		return o, err
 	}
 
@@ -257,21 +300,47 @@ func (s *Schema) ValidatePlan(o Plan, n int, channelIDs map[string]struct{}) (Pl
 }
 
 func (s *Schema) ValidateHistory(o HistoryItem, n int) (HistoryItem, error) {
-	if err := validations.InRange[int](fmt.Sprintf("history[%d].year", n), o.Year, 1970, 2075); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("history[%d].year", n), o.Year, 1970, 2075); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[float64](fmt.Sprintf("plans[%d].income", n), o.Income, 0, 1000000000); err != nil {
+	if err := common.InRange[float64](fmt.Sprintf("plans[%d].income", n), o.Income, 0, 1000000000); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[float64](fmt.Sprintf("plans[%d].expenses", n), o.Expenses, 0, 1000000000); err != nil {
+	if err := common.InRange[float64](fmt.Sprintf("plans[%d].expenses", n), o.Expenses, 0, 1000000000); err != nil {
 		return o, err
 	}
 
-	if err := validations.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 0, 1024); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 0, 1024); err != nil {
 		return o, err
 	}
 
 	return o, nil
+}
+
+// CheckProvenance fetches the .well-known URL list for the given u and checks
+// wehther the manifestURL is present in it, establishing its provenance.
+func (s *Schema) CheckProvenance(u URL, manifestURL string) error {
+	if u.WellKnown == "" {
+		return nil
+	}
+
+	body, err := s.hc.Get(u.WellKnownObj)
+	if err != nil {
+		return err
+	}
+
+	ub := []byte(manifestURL)
+	for n, b := range bytes.Split(body, []byte("\n")) {
+		if bytes.Equal(ub, b) {
+			return nil
+		}
+
+		if n > 100 {
+			return errors.New("too many lines in the .well-known list")
+		}
+	}
+
+	return fmt.Errorf("manifest URL %s was not found in the .well-known list", manifestURL)
 }
