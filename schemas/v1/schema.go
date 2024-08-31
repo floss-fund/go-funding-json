@@ -20,6 +20,8 @@ const (
 	// CurrentVersion is the exact current version of the schema with minor/patch changes.
 	// It should be backwards compatible be MajorVersion.
 	CurrentVersion = "v1.0.0"
+
+	maxUrlLen = 1024
 )
 
 // Schema represents the schema+parser+validator for a particular version.
@@ -59,8 +61,26 @@ func (s *Schema) ParseManifest(b []byte, manifestURL string, checkProvenance boo
 	}
 
 	// Validate the manifest's schema.
-	m.URL = manifestURL
 	m.Body = json.RawMessage(b)
+
+	m.URL = URL{URL: manifestURL}
+	if err := parseURL(&m.URL); err != nil {
+		return m, err
+	}
+
+	// Parse various URL strings to url.URL obijects.
+	for n := 0; n < len(m.Projects); n++ {
+		// Project webpage.
+		if err := parseURL(&m.Projects[n].WebpageURL); err != nil {
+			return m, err
+		}
+
+		// Project repository.
+		if err := parseURL(&m.Projects[n].RepositoryUrl); err != nil {
+			return m, err
+		}
+	}
+
 	if v, err := s.Validate(m); err != nil {
 		return v, err
 	} else {
@@ -69,15 +89,16 @@ func (s *Schema) ParseManifest(b []byte, manifestURL string, checkProvenance boo
 
 	// Establish the provenance of all URLs mentioned in the manifest.
 	if checkProvenance {
-		if err := s.CheckProvenance(m.Entity.WebpageURL, manifestURL); err != nil {
+		if err := s.CheckProvenance(m.Entity.WebpageURL, m.URL); err != nil {
 			return m, err
 		}
 
 		for _, o := range m.Projects {
-			if err := s.CheckProvenance(o.WebpageURL, manifestURL); err != nil {
+			o := o
+			if err := s.CheckProvenance(o.WebpageURL, m.URL); err != nil {
 				return m, err
 			}
-			if err := s.CheckProvenance(o.RepositoryUrl, manifestURL); err != nil {
+			if err := s.CheckProvenance(o.RepositoryUrl, m.URL); err != nil {
 				return m, err
 			}
 		}
@@ -92,7 +113,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 		return m, fmt.Errorf("version should be %s", MajorVersion)
 	}
 
-	mURL, err := common.IsURL("manifest URL", m.URL, 1024)
+	mURL, err := common.IsURL("manifest URL", m.URL.URL, 1024)
 	if err != nil {
 		return m, err
 	}
@@ -167,11 +188,8 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 		return o, err
 	}
 
-	if tgURL, wkURL, err := common.WellKnownURL("entity.webpageUrl", manifest, o.WebpageURL.URL, o.WebpageURL.WellKnown, s.opt.WellKnownURI, 1024); err != nil {
+	if err := common.WellKnownURL("entity.webpageUrl", manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI); err != nil {
 		return o, err
-	} else {
-		o.WebpageURL.URLobj = tgURL
-		o.WebpageURL.WellKnownObj = wkURL
 	}
 
 	return o, nil
@@ -186,18 +204,12 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		return o, err
 	}
 
-	if tgURL, wkURL, err := common.WellKnownURL(fmt.Sprintf("projects[%d].webpageUrl", n), manifest, o.WebpageURL.URL, o.WebpageURL.WellKnown, s.opt.WellKnownURI, 1024); err != nil {
+	if err := common.WellKnownURL(fmt.Sprintf("projects[%d].webpageUrl", n), manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI); err != nil {
 		return o, err
-	} else {
-		o.WebpageURL.URLobj = tgURL
-		o.WebpageURL.WellKnownObj = wkURL
 	}
 
-	if tgURL, wkURL, err := common.WellKnownURL(fmt.Sprintf("projects[%d].repositoryUrl", n), manifest, o.RepositoryUrl.URL, o.RepositoryUrl.WellKnown, s.opt.WellKnownURI, 1024); err != nil {
+	if err := common.WellKnownURL(fmt.Sprintf("projects[%d].repositoryUrl", n), manifest, o.RepositoryUrl.URLobj, o.RepositoryUrl.WellKnownObj, s.opt.WellKnownURI); err != nil {
 		return o, err
-	} else {
-		o.RepositoryUrl.URLobj = tgURL
-		o.RepositoryUrl.WellKnownObj = wkURL
 	}
 
 	// License.
@@ -321,7 +333,7 @@ func (s *Schema) ValidateHistory(o HistoryItem, n int) (HistoryItem, error) {
 
 // CheckProvenance fetches the .well-known URL list for the given u and checks
 // wehther the manifestURL is present in it, establishing its provenance.
-func (s *Schema) CheckProvenance(u URL, manifestURL string) error {
+func (s *Schema) CheckProvenance(u URL, manifest URL) error {
 	if u.WellKnown == "" {
 		return nil
 	}
@@ -331,7 +343,8 @@ func (s *Schema) CheckProvenance(u URL, manifestURL string) error {
 		return err
 	}
 
-	ub := []byte(manifestURL)
+	mStr := manifest.URLobj.String()
+	ub := []byte(mStr)
 	for n, b := range bytes.Split(body, []byte("\n")) {
 		if bytes.Equal(ub, b) {
 			return nil
@@ -342,5 +355,25 @@ func (s *Schema) CheckProvenance(u URL, manifestURL string) error {
 		}
 	}
 
-	return fmt.Errorf("manifest URL %s was not found in the .well-known list", manifestURL)
+	return fmt.Errorf("manifest URL %s was not found in the .well-known list", mStr)
+}
+
+func parseURL(u *URL) error {
+	{
+		p, err := common.IsURL("", u.URL, maxUrlLen)
+		if err != nil {
+			return err
+		}
+		u.URLobj = p
+	}
+
+	if u.WellKnown != "" {
+		p, err := common.IsURL("", u.WellKnown, maxUrlLen)
+		if err != nil {
+			return err
+		}
+		u.WellKnownObj = p
+	}
+
+	return nil
 }

@@ -97,7 +97,7 @@ type History []HistoryItem
 //easyjson:json
 type Manifest struct {
 	// This is added internally and is not expected in the manifest itself.
-	URL string `json:"-" db:"-"`
+	URL URL `json:"-" db:"-"`
 
 	ID       string          `json:"id"`
 	UUID     string          `json:"uuid"`
@@ -111,10 +111,4 @@ type Manifest struct {
 		Plans    Plans    `json:"plans"`
 		History  History  `json:"history"`
 	} `json:"funding"`
-}
-
-type ManifestURL struct {
-	ID     int      `json:"id"`
-	URL    string   `json:"url"`
-	URLobj *url.URL `json:"-" db:"-"`
 }
