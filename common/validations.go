@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const manifestFile = "funding.json"
+
 var (
 	reTag = regexp.MustCompile(`^\p{L}([\p{L}\d-]+)?\p{L}$`)
 	reID  = regexp.MustCompile(`^[a-z0-9]([[a-z\d-]+)?[a-z0-9]$`)
@@ -87,7 +89,7 @@ func WellKnownURL(tag string, manifestURL *url.URL, target, wellKnown *url.URL, 
 
 	var (
 		// Get the paths are suffix them with "/" for checking using HasPrefix later.
-		mfPath = strings.TrimRight(strings.TrimRight(manifestURL.Path, "funding.json"), "/") + "/"
+		mfPath = strings.TrimRight(strings.TrimRight(manifestURL.Path, manifestFile), "/") + "/"
 		tgPath = strings.TrimRight(target.Path, "/") + "/"
 	)
 

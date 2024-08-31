@@ -113,7 +113,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 		return m, fmt.Errorf("version should be %s", MajorVersion)
 	}
 
-	mURL, err := common.IsURL("manifest URL", m.URL.URL, 1024)
+	mURL, err := common.IsURL("manifest URL", m.URL.URL, maxUrlLen)
 	if err != nil {
 		return m, err
 	}
@@ -200,7 +200,7 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 5, 1024); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 5, maxUrlLen); err != nil {
 		return o, err
 	}
 
@@ -266,7 +266,7 @@ func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%d].description", n), len(o.Description), 0, 1024); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%d].description", n), len(o.Description), 0, maxUrlLen); err != nil {
 		return o, err
 	}
 
@@ -286,7 +286,7 @@ func (s *Schema) ValidatePlan(o Plan, n int, channelIDs map[string]struct{}) (Pl
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("plans[%d].description", n), len(o.Description), 0, 1024); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("plans[%d].description", n), len(o.Description), 0, maxUrlLen); err != nil {
 		return o, err
 	}
 
@@ -324,7 +324,7 @@ func (s *Schema) ValidateHistory(o HistoryItem, n int) (HistoryItem, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 0, 1024); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 0, maxUrlLen); err != nil {
 		return o, err
 	}
 
