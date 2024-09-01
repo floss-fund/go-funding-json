@@ -59,7 +59,7 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV1(out *jwriter
 		out.RawString(prefix[1:])
 		out.String(string(in.URL))
 	}
-	{
+	if in.WellKnown != "" {
 		const prefix string = ",\"wellKnown\":"
 		out.RawString(prefix)
 		out.String(string(in.WellKnown))
@@ -560,16 +560,8 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV15(in *jlexer.
 			continue
 		}
 		switch key {
-		case "id":
-			out.ID = string(in.String())
-		case "uuid":
-			out.UUID = string(in.String())
 		case "version":
 			out.Version = string(in.String())
-		case "body":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.Body).UnmarshalJSON(data))
-			}
 		case "entity":
 			(out.Entity).UnmarshalEasyJSON(in)
 		case "projects":
@@ -591,29 +583,14 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV15(out *jwrite
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"id\":"
+		const prefix string = ",\"version\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.ID))
-	}
-	{
-		const prefix string = ",\"uuid\":"
-		out.RawString(prefix)
-		out.String(string(in.UUID))
-	}
-	{
-		const prefix string = ",\"version\":"
-		out.RawString(prefix)
 		out.String(string(in.Version))
-	}
-	{
-		const prefix string = ",\"body\":"
-		out.RawString(prefix)
-		out.Raw((in.Body).MarshalJSON())
 	}
 	{
 		const prefix string = ",\"entity\":"

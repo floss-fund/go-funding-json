@@ -11,13 +11,13 @@ const wURI = "/.well-known/funding-manifest-urls"
 
 func TestParseURL(t *testing.T) {
 	u := URL{URL: "https://floss.fund"}
-	assert.NoError(t, parseURL(&u))
+	assert.NoError(t, parseURL("", &u))
 	assert.NotNil(t, u.URLobj)
 	assert.Nil(t, u.WellKnownObj)
 	assert.Equal(t, u.URLobj.String(), u.URL)
 
 	u = URL{URL: "https://floss.fund", WellKnown: "https://floss.fund/.well-known/test"}
-	assert.NoError(t, parseURL(&u))
+	assert.NoError(t, parseURL("", &u))
 	assert.NotNil(t, u.URLobj)
 	assert.NotNil(t, u.WellKnownObj)
 	assert.Equal(t, u.URLobj.String(), u.URL)
@@ -28,9 +28,9 @@ func TestWellKnownURL(t *testing.T) {
 	f := func(manifest URL, target URL, errExpected bool) {
 		t.Helper()
 
-		assert.NoError(t, parseURL(&target))
+		assert.NoError(t, parseURL("", &target))
 
-		res := common.WellKnownURL("t", manifest.URLobj, target.URLobj, target.WellKnownObj, wURI)
+		_, res := common.WellKnownURL("t", manifest.URLobj, target.URLobj, target.WellKnownObj, wURI)
 		if errExpected {
 			assert.Error(t, res)
 		} else {
@@ -39,7 +39,7 @@ func TestWellKnownURL(t *testing.T) {
 	}
 
 	m := URL{URL: "https://floss.fund/funding.json"}
-	assert.NoError(t, parseURL(&m))
+	assert.NoError(t, parseURL("", &m))
 
 	f(m, URL{URL: "https://floss.fund"}, false)
 	f(m, URL{URL: "https://floss.fund", WellKnown: "https://floss.fund/.well-known/funding-manifest-urls"}, false)
@@ -48,19 +48,19 @@ func TestWellKnownURL(t *testing.T) {
 	f(m, URL{URL: "https://floss.fund/user/something/project"}, false)
 
 	m = URL{URL: "https://floss.fund/user/funding.json"}
-	assert.NoError(t, parseURL(&m))
+	assert.NoError(t, parseURL("", &m))
 	f(m, URL{URL: "https://floss.fund/project"}, true)
 	f(m, URL{URL: "https://floss.fund/user2/project"}, true)
 	f(m, URL{URL: "https://floss.fund/user/project"}, false)
 	f(m, URL{URL: "https://floss.fund/user/project/subproject"}, false)
 
 	m = URL{URL: "https://community.org/funding.json"}
-	assert.NoError(t, parseURL(&m))
+	assert.NoError(t, parseURL("", &m))
 	f(m, URL{URL: "https://project.net"}, true)
 	f(m, URL{URL: "https://project.community.org"}, true)
 
 	m = URL{URL: "https://github.com/user/project/blob/main/funding.json"}
-	assert.NoError(t, parseURL(&m))
+	assert.NoError(t, parseURL("", &m))
 	f(m, URL{URL: "https://floss.fund/project"}, true)
 	f(m, URL{URL: "https://github.com/user/project2"}, true)
 	f(m, URL{URL: "https://github.com/user2/project"}, true)

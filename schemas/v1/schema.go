@@ -2,12 +2,10 @@ package v1
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/url"
-	"path"
 	"strings"
 
 	"github.com/floss-fund/go-funding-json/common"
@@ -54,34 +52,32 @@ func New(opt *Opt, hOpt common.HTTPOpt, l *log.Logger) *Schema {
 	}
 }
 
-// ParseManifest parses a given JSON body, validates it, and returns the manifest.
+// ParseManifest parses a given JSON body, validates and cleans it, and returns the manifest.
+// For URLs that don't require a .well-known, if one is provided, it's emptied.
 func (s *Schema) ParseManifest(b []byte, manifestURL string, checkProvenance bool) (Manifest, error) {
 	var m Manifest
 	if err := m.UnmarshalJSON(b); err != nil {
 		return m, fmt.Errorf("error parsing JSON body: %v", err)
 	}
 
-	// Validate the manifest's schema.
-	m.Body = json.RawMessage(b)
-
 	m.URL = URL{URL: manifestURL}
-	if err := parseURL(&m.URL); err != nil {
+	if err := parseURL("manifest URL", &m.URL); err != nil {
 		return m, err
 	}
 
-	if err := parseURL(&m.Entity.WebpageURL); err != nil {
+	if err := parseURL("entity.webpageUrl", &m.Entity.WebpageURL); err != nil {
 		return m, err
 	}
 
 	// Parse various URL strings to url.URL obijects.
 	for n := 0; n < len(m.Projects); n++ {
 		// Project webpage.
-		if err := parseURL(&m.Projects[n].WebpageURL); err != nil {
+		if err := parseURL(fmt.Sprintf("projects[%d].webpageUrl", n), &m.Projects[n].WebpageURL); err != nil {
 			return m, err
 		}
 
 		// Project repository.
-		if err := parseURL(&m.Projects[n].RepositoryUrl); err != nil {
+		if err := parseURL(fmt.Sprintf("projects[%d].repositoryUrl", n), &m.Projects[n].RepositoryUrl); err != nil {
 			return m, err
 		}
 	}
@@ -194,8 +190,14 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 		return o, err
 	}
 
-	if err := common.WellKnownURL("entity.webpageUrl", manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI); err != nil {
+	wkRequired, err := common.WellKnownURL("entity.webpageUrl", manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI)
+	if err != nil {
 		return o, err
+	}
+
+	if !wkRequired {
+		o.WebpageURL.WellKnownObj = nil
+		o.WebpageURL.WellKnown = ""
 	}
 
 	return o, nil
@@ -210,12 +212,22 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		return o, err
 	}
 
-	if err := common.WellKnownURL(fmt.Sprintf("projects[%d].webpageUrl", n), manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI); err != nil {
+	wkRequired, err := common.WellKnownURL(fmt.Sprintf("projects[%d].webpageUrl", n), manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI)
+	if err != nil {
 		return o, err
 	}
+	if !wkRequired {
+		o.WebpageURL.WellKnownObj = nil
+		o.WebpageURL.WellKnown = ""
+	}
 
-	if err := common.WellKnownURL(fmt.Sprintf("projects[%d].repositoryUrl", n), manifest, o.RepositoryUrl.URLobj, o.RepositoryUrl.WellKnownObj, s.opt.WellKnownURI); err != nil {
+	wkRequired, err = common.WellKnownURL(fmt.Sprintf("projects[%d].repositoryUrl", n), manifest, o.RepositoryUrl.URLobj, o.RepositoryUrl.WellKnownObj, s.opt.WellKnownURI)
+	if err != nil {
 		return o, err
+	}
+	if !wkRequired {
+		o.RepositoryUrl.WellKnownObj = nil
+		o.RepositoryUrl.WellKnown = ""
 	}
 
 	// License.
@@ -364,31 +376,34 @@ func (s *Schema) CheckProvenance(u URL, manifest URL) error {
 	return fmt.Errorf("manifest URL %s was not found in the .well-known list", mStr)
 }
 
-func parseURL(u *URL) error {
+func parseURL(tag string, u *URL) error {
 	{
-		p, err := common.IsURL("", u.URL, maxUrlLen)
+
+		p, err := common.IsURL(tag, u.URL, maxUrlLen)
 		if err != nil {
 			return err
 		}
 
-		p.Path = path.Clean(strings.ReplaceAll(p.Path, "...", ""))
-		p.RawPath = url.PathEscape(p.Path)
-
+		hasTrailing := strings.HasSuffix(u.URL, "/")
 		u.URLobj = p
 		u.URL = p.String()
+		if !hasTrailing {
+			u.URL = strings.TrimSuffix(u.URL, "/")
+		}
 	}
 
 	if u.WellKnown != "" {
-		p, err := common.IsURL("", u.WellKnown, maxUrlLen)
+		p, err := common.IsURL(tag, u.WellKnown, maxUrlLen)
 		if err != nil {
 			return err
 		}
 
-		p.Path = path.Clean(strings.ReplaceAll(p.Path, "...", ""))
-		p.RawPath = url.PathEscape(p.Path)
-
+		hasTrailing := strings.HasSuffix(u.URL, "/")
 		u.WellKnownObj = p
 		u.WellKnown = p.String()
+		if !hasTrailing {
+			u.URL = strings.TrimSuffix(u.URL, "/")
+		}
 	}
 
 	return nil

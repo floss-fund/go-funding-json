@@ -1,14 +1,13 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/url"
 )
 
 var (
 	EntityTypes     = []string{"individual", "group", "organisation", "other"}
 	EntityRoles     = []string{"owner", "steward", "maintainer", "contributor", "other"}
-	ChannelTypes    = []string{"bank", "payment-provider", "check", "cash", "other"}
+	ChannelTypes    = []string{"bank", "payment-provider", "cheque", "cash", "other"}
 	PlanFrequencies = []string{"one-time", "weekly", "fortnightly", "monthly", "yearly", "other"}
 	PlanStatuses    = []string{"active", "inactive"}
 )
@@ -16,7 +15,7 @@ var (
 //easyjson:json
 type URL struct {
 	URL       string `json:"url"`
-	WellKnown string `json:"wellKnown"`
+	WellKnown string `json:"wellKnown,omitempty"`
 
 	// Parsed URLs.
 	URLobj       *url.URL `json:"-" db:"-"`
@@ -99,12 +98,9 @@ type Manifest struct {
 	// This is added internally and is not expected in the manifest itself.
 	URL URL `json:"-" db:"-"`
 
-	ID       string          `json:"id"`
-	UUID     string          `json:"uuid"`
-	Version  string          `json:"version"`
-	Body     json.RawMessage `json:"body"`
-	Entity   Entity          `json:"entity"`
-	Projects Projects        `json:"projects"`
+	Version  string   `json:"version"`
+	Entity   Entity   `json:"entity"`
+	Projects Projects `json:"projects"`
 
 	Funding struct {
 		Channels Channels `json:"channels"`
