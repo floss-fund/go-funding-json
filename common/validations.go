@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/mail"
 	"net/url"
+	"path"
 	"regexp"
 	"slices"
 	"strings"
@@ -74,6 +75,9 @@ func IsURL(tag, u string, maxLen int) (*url.URL, error) {
 	if err != nil || p.Host == "" || (p.Scheme != "https" && p.Scheme != "http") {
 		return nil, fmt.Errorf("`%s` is not a valid URL", tag)
 	}
+
+	p.Path = path.Clean(strings.ReplaceAll(p.Path, "...", ""))
+	p.RawPath = url.PathEscape(p.Path)
 
 	return p, nil
 }

@@ -65,4 +65,5 @@ func TestWellKnownURL(t *testing.T) {
 	f(m, URL{URL: "https://github.com/user/project2"}, true)
 	f(m, URL{URL: "https://github.com/user2/project"}, true)
 	f(m, URL{URL: "https://github.com/user/project"}, false)
+	f(m, URL{URL: "https://github.com/user/project/../../test"}, true)
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/floss-fund/go-funding-json/common"
@@ -121,6 +122,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	if err != nil {
 		return m, err
 	}
+	m.URL.URL = mURL.String()
 
 	// Entity.
 	if m.Entity, err = s.ValidateEntity(m.Entity, mURL); err != nil {
@@ -368,7 +370,12 @@ func parseURL(u *URL) error {
 		if err != nil {
 			return err
 		}
+
+		p.Path = path.Clean(strings.ReplaceAll(p.Path, "...", ""))
+		p.RawPath = url.PathEscape(p.Path)
+
 		u.URLobj = p
+		u.URL = p.String()
 	}
 
 	if u.WellKnown != "" {
@@ -376,7 +383,12 @@ func parseURL(u *URL) error {
 		if err != nil {
 			return err
 		}
+
+		p.Path = path.Clean(strings.ReplaceAll(p.Path, "...", ""))
+		p.RawPath = url.PathEscape(p.Path)
+
 		u.WellKnownObj = p
+		u.WellKnown = p.String()
 	}
 
 	return nil
