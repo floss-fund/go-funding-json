@@ -38,7 +38,7 @@ func InList[S ~[]E, E comparable](tag string, item E, items S) error {
 
 func InMap[M ~map[I]I, I comparable](tag, mapName string, item I, mp M) error {
 	if _, ok := mp[item]; !ok {
-		return fmt.Errorf("`%s` was not found in the %s", tag, mapName)
+		return fmt.Errorf("`%s` not found in the %s", tag, mapName)
 	}
 
 	return nil
@@ -123,21 +123,22 @@ func WellKnownURL(tag string, manifestURL *url.URL, target, wellKnown *url.URL, 
 	}
 
 	var (
-		wkPath = strings.TrimRight(wellKnown.Path, "/")
+		wkPath   = strings.TrimRight(wellKnown.Path, "/")
+		isWKRoot = strings.TrimRight(wkPath, wellKnownURI) == ""
 	)
 
-	// If the base path is the root of the domain, then .well-known should also be.
-	if tgPath == "" && strings.TrimRight(wkPath, wellKnownURI) != "" {
-		return fmt.Errorf("`%s.url` and manifest URL host and paths do not match. Expected %s.wellKnown for provenance check at %s://%s%s*%s", tag, tag, target.Scheme, target.Host, target.Path, wellKnownURI)
+	// If wellKnown is at the root of the host, then all sub-paths are acceptable.
+	if isWKRoot {
+		return nil
 	}
 
 	// If it's not at the root, then basePath should be a suffix of the well known path.
 	// eg:
-	// github.com/user ~= github.com/user/project/blob/main/.well-known/funding-json-urls
-	// github.com/user/project ~= github.com/user/project/blob/main/.well-known/funding-json-urls
-	// github.com/use !~= github.com/user/project/blob/main/.well-known/funding-json-urls
-	if !strings.HasPrefix(wkPath, tgPath) || wkPath[len(tgPath)] != '/' {
-		return fmt.Errorf("`%s.url` and `%s.wellKnown` paths do not match", tag, tag)
+	// github.com/user ~= github.com/user/project/blob/main/.well-known/funding-manifest-urls
+	// github.com/user/project ~= github.com/user/project/blob/main/.well-known/funding-manifest-urls
+	// github.com/use !~= github.com/user/project/blob/main/.well-known/funding-manifest-urls
+	if tgPath != "/" && !strings.HasPrefix(wkPath, tgPath) {
+		return fmt.Errorf("`%s.url` and manifest URL host and paths do not match. Expected %s.wellKnown for provenance check at %s://%s%s*%s", tag, tag, target.Scheme, target.Host, target.Path, wellKnownURI)
 	}
 
 	return nil

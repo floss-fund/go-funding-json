@@ -8,7 +8,7 @@ import (
 var (
 	EntityTypes     = []string{"individual", "group", "organisation", "other"}
 	EntityRoles     = []string{"owner", "steward", "maintainer", "contributor", "other"}
-	ChannelTypes    = []string{"bank", "gateway", "cheque", "cash", "other"}
+	ChannelTypes    = []string{"bank", "payment-provider", "check", "cash", "other"}
 	PlanFrequencies = []string{"one-time", "weekly", "fortnightly", "monthly", "yearly", "other"}
 	PlanStatuses    = []string{"active", "inactive"}
 )

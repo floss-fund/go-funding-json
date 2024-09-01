@@ -68,6 +68,10 @@ func (s *Schema) ParseManifest(b []byte, manifestURL string, checkProvenance boo
 		return m, err
 	}
 
+	if err := parseURL(&m.Entity.WebpageURL); err != nil {
+		return m, err
+	}
+
 	// Parse various URL strings to url.URL obijects.
 	for n := 0; n < len(m.Projects); n++ {
 		// Project webpage.
@@ -110,7 +114,7 @@ func (s *Schema) ParseManifest(b []byte, manifestURL string, checkProvenance boo
 // Validate validates a given manifest against its schema.
 func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	if semver.Major(m.Version) != MajorVersion {
-		return m, fmt.Errorf("version should be %s", MajorVersion)
+		return m, fmt.Errorf("major version should be %s (current version is %s)", MajorVersion, CurrentVersion)
 	}
 
 	mURL, err := common.IsURL("manifest URL", m.URL.URL, maxUrlLen)

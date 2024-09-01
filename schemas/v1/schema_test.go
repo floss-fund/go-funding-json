@@ -43,6 +43,7 @@ func TestWellKnownURL(t *testing.T) {
 
 	f(m, URL{URL: "https://floss.fund"}, false)
 	f(m, URL{URL: "https://floss.fund", WellKnown: "https://floss.fund/.well-known/funding-manifest-urls"}, false)
+	f(m, URL{URL: "https://floss.fund/sub/project", WellKnown: "https://floss.fund/.well-known/funding-manifest-urls"}, false)
 	f(m, URL{URL: "https://floss.fund/project"}, false)
 	f(m, URL{URL: "https://floss.fund/user/something/project"}, false)
 
