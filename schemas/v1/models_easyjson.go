@@ -206,29 +206,6 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV12(in *jlexer.
 				}
 				in.Delim(']')
 			}
-		case "frameworks":
-			if in.IsNull() {
-				in.Skip()
-				out.Frameworks = nil
-			} else {
-				in.Delim('[')
-				if out.Frameworks == nil {
-					if !in.IsDelim(']') {
-						out.Frameworks = make([]string, 0, 4)
-					} else {
-						out.Frameworks = []string{}
-					}
-				} else {
-					out.Frameworks = (out.Frameworks)[:0]
-				}
-				for !in.IsDelim(']') {
-					var v5 string
-					v5 = string(in.String())
-					out.Frameworks = append(out.Frameworks, v5)
-					in.WantComma()
-				}
-				in.Delim(']')
-			}
 		case "tags":
 			if in.IsNull() {
 				in.Skip()
@@ -245,9 +222,9 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV12(in *jlexer.
 					out.Tags = (out.Tags)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v6 string
-					v6 = string(in.String())
-					out.Tags = append(out.Tags, v6)
+					var v5 string
+					v5 = string(in.String())
+					out.Tags = append(out.Tags, v5)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -293,27 +270,11 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV12(out *jwrite
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v7, v8 := range in.Licenses {
-				if v7 > 0 {
+			for v6, v7 := range in.Licenses {
+				if v6 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v8))
-			}
-			out.RawByte(']')
-		}
-	}
-	{
-		const prefix string = ",\"frameworks\":"
-		out.RawString(prefix)
-		if in.Frameworks == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v9, v10 := range in.Frameworks {
-				if v9 > 0 {
-					out.RawByte(',')
-				}
-				out.String(string(v10))
+				out.String(string(v7))
 			}
 			out.RawByte(']')
 		}
@@ -325,11 +286,11 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV12(out *jwrite
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v11, v12 := range in.Tags {
-				if v11 > 0 {
+			for v8, v9 := range in.Tags {
+				if v8 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v12))
+				out.String(string(v9))
 			}
 			out.RawByte(']')
 		}
@@ -377,9 +338,9 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV13(in *jlexer.
 			*out = (*out)[:0]
 		}
 		for !in.IsDelim(']') {
-			var v13 Plan
-			(v13).UnmarshalEasyJSON(in)
-			*out = append(*out, v13)
+			var v10 Plan
+			(v10).UnmarshalEasyJSON(in)
+			*out = append(*out, v10)
 			in.WantComma()
 		}
 		in.Delim(']')
@@ -393,11 +354,11 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV13(out *jwrite
 		out.RawString("null")
 	} else {
 		out.RawByte('[')
-		for v14, v15 := range in {
-			if v14 > 0 {
+		for v11, v12 := range in {
+			if v11 > 0 {
 				out.RawByte(',')
 			}
-			(v15).MarshalEasyJSON(out)
+			(v12).MarshalEasyJSON(out)
 		}
 		out.RawByte(']')
 	}
@@ -475,9 +436,9 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV14(in *jlexer.
 					out.Channels = (out.Channels)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v16 string
-					v16 = string(in.String())
-					out.Channels = append(out.Channels, v16)
+					var v13 string
+					v13 = string(in.String())
+					out.Channels = append(out.Channels, v13)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -538,11 +499,11 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV14(out *jwrite
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v17, v18 := range in.Channels {
-				if v17 > 0 {
+			for v14, v15 := range in.Channels {
+				if v14 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v18))
+				out.String(string(v15))
 			}
 			out.RawByte(']')
 		}
@@ -833,9 +794,9 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV17(in *jlexer.
 			*out = (*out)[:0]
 		}
 		for !in.IsDelim(']') {
-			var v19 HistoryItem
-			(v19).UnmarshalEasyJSON(in)
-			*out = append(*out, v19)
+			var v16 HistoryItem
+			(v16).UnmarshalEasyJSON(in)
+			*out = append(*out, v16)
 			in.WantComma()
 		}
 		in.Delim(']')
@@ -849,11 +810,11 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV17(out *jwrite
 		out.RawString("null")
 	} else {
 		out.RawByte('[')
-		for v20, v21 := range in {
-			if v20 > 0 {
+		for v17, v18 := range in {
+			if v17 > 0 {
 				out.RawByte(',')
 			}
-			(v21).MarshalEasyJSON(out)
+			(v18).MarshalEasyJSON(out)
 		}
 		out.RawByte(']')
 	}
@@ -1000,9 +961,9 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV19(in *jlexer.
 			*out = (*out)[:0]
 		}
 		for !in.IsDelim(']') {
-			var v22 Channel
-			(v22).UnmarshalEasyJSON(in)
-			*out = append(*out, v22)
+			var v19 Channel
+			(v19).UnmarshalEasyJSON(in)
+			*out = append(*out, v19)
 			in.WantComma()
 		}
 		in.Delim(']')
@@ -1016,11 +977,11 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV19(out *jwrite
 		out.RawString("null")
 	} else {
 		out.RawByte('[')
-		for v23, v24 := range in {
-			if v23 > 0 {
+		for v20, v21 := range in {
+			if v20 > 0 {
 				out.RawByte(',')
 			}
-			(v24).MarshalEasyJSON(out)
+			(v21).MarshalEasyJSON(out)
 		}
 		out.RawByte(']')
 	}
