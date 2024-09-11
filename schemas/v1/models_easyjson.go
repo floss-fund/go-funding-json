@@ -870,8 +870,8 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV18(in *jlexer.
 			out.Name = string(in.String())
 		case "email":
 			out.Email = string(in.String())
-		case "telephone":
-			out.Telephone = string(in.String())
+		case "phone":
+			out.Phone = string(in.String())
 		case "webpageUrl":
 			(out.WebpageURL).UnmarshalEasyJSON(in)
 		default:
@@ -909,9 +909,9 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV18(out *jwrite
 		out.String(string(in.Email))
 	}
 	{
-		const prefix string = ",\"telephone\":"
+		const prefix string = ",\"phone\":"
 		out.RawString(prefix)
-		out.String(string(in.Telephone))
+		out.String(string(in.Phone))
 	}
 	{
 		const prefix string = ",\"webpageUrl\":"

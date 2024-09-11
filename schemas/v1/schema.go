@@ -186,7 +186,7 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int]("entity.telephone", len(o.Telephone), 0, 32); err != nil {
+	if err := common.InRange[int]("entity.phone", len(o.Phone), 0, 32); err != nil {
 		return o, err
 	}
 

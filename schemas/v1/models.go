@@ -30,7 +30,7 @@ type Entity struct {
 	Role       string `json:"role"`
 	Name       string `json:"name"`
 	Email      string `json:"email"`
-	Telephone  string `json:"telephone"`
+	Phone      string `json:"phone"`
 	WebpageURL URL    `json:"webpageUrl"`
 }
 
