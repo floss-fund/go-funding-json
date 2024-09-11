@@ -183,8 +183,29 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV12(in *jlexer.
 			(out.WebpageURL).UnmarshalEasyJSON(in)
 		case "repositoryUrl":
 			(out.RepositoryUrl).UnmarshalEasyJSON(in)
-		case "license":
-			out.License = string(in.String())
+		case "licenses":
+			if in.IsNull() {
+				in.Skip()
+				out.Licenses = nil
+			} else {
+				in.Delim('[')
+				if out.Licenses == nil {
+					if !in.IsDelim(']') {
+						out.Licenses = make([]string, 0, 4)
+					} else {
+						out.Licenses = []string{}
+					}
+				} else {
+					out.Licenses = (out.Licenses)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v4 string
+					v4 = string(in.String())
+					out.Licenses = append(out.Licenses, v4)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
 		case "frameworks":
 			if in.IsNull() {
 				in.Skip()

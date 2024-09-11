@@ -42,7 +42,7 @@ type Project struct {
 	Description   string   `json:"description"`
 	WebpageURL    URL      `json:"webpageUrl"`
 	RepositoryUrl URL      `json:"repositoryUrl"`
-	License       string   `json:"license"`
+	Licenses      []string `json:"licenses"`
 	Frameworks    []string `json:"frameworks"`
 	Tags          []string `json:"tags"`
 }

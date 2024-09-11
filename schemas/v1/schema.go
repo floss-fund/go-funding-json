@@ -232,27 +232,12 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 
 	// License.
 	licenseTag := fmt.Sprintf("projects[%d].license", n)
-	if err := common.InRange[int](licenseTag, len(o.License), 2, 64); err != nil {
-		return o, err
-	}
-	if strings.HasPrefix(o.License, "spdx:") {
-		if err := common.InMap(licenseTag, "spdx license list", strings.TrimPrefix(o.License, "spdx:"), s.opt.Licenses); err != nil {
+	for _, l := range o.Licenses {
+		if err := common.InRange[int](licenseTag, len(l), 2, 64); err != nil {
 			return o, err
 		}
-	}
-
-	// Frameworks.
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].frameworks", n), len(o.Frameworks), 0, 5); err != nil {
-		return o, err
-	}
-	for i, f := range o.Frameworks {
-		fTag := fmt.Sprintf("projects[%d].frameworks[%d]", n, i)
-		if err := common.InRange[int](fTag, len(f), 2, 64); err != nil {
-			return o, err
-		}
-
-		if strings.HasPrefix(f, "lang:") {
-			if err := common.InMap(fTag, "default programming language list", strings.TrimPrefix(f, "lang:"), s.opt.ProgrammingLanguages); err != nil {
+		if strings.HasPrefix(l, "spdx:") {
+			if err := common.InMap(licenseTag, "spdx license list", strings.TrimPrefix(l, "spdx:"), s.opt.Licenses); err != nil {
 				return o, err
 			}
 		}
