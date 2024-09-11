@@ -178,15 +178,15 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int]("entity.name", len(o.Name), 2, 128); err != nil {
+	if err := common.InRange[int]("entity.name", len(o.Name), 2, 256); err != nil {
 		return o, err
 	}
 
-	if err := common.IsEmail("entity.email", o.Email, 128); err != nil {
+	if err := common.IsEmail("entity.email", o.Email, 256); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int]("entity.telephone", len(o.Telephone), 0, 24); err != nil {
+	if err := common.InRange[int]("entity.telephone", len(o.Telephone), 0, 32); err != nil {
 		return o, err
 	}
 
@@ -208,7 +208,7 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 5, maxUrlLen); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 5, 2056); err != nil {
 		return o, err
 	}
 
@@ -265,11 +265,11 @@ func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%d].address", n), len(o.Address), 0, 128); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%d].address", n), len(o.Address), 0, 512); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%d].description", n), len(o.Description), 0, maxUrlLen); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%d].description", n), len(o.Description), 0, 512); err != nil {
 		return o, err
 	}
 
@@ -285,11 +285,11 @@ func (s *Schema) ValidatePlan(o Plan, n int, channelIDs map[string]struct{}) (Pl
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("plans[%d].name", n), len(o.Name), 3, 128); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("plans[%d].name", n), len(o.Name), 3, 256); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("plans[%d].description", n), len(o.Description), 0, maxUrlLen); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("plans[%d].description", n), len(o.Description), 0, 512); err != nil {
 		return o, err
 	}
 
