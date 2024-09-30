@@ -71,7 +71,7 @@ func (h *HTTPClient) Get(u *url.URL) ([]byte, error) {
 
 	// Retry N times.
 	for n := 0; n < h.opt.Retries; n++ {
-		body, retry, statusCode, err = h.doReq(http.MethodGet, u.String(), nil, h.headers)
+		body, retry, statusCode, err = h.DoReq(http.MethodGet, u.String(), nil, h.headers)
 		if err == nil || !retry {
 			break
 		}
@@ -93,8 +93,8 @@ func (h *HTTPClient) Get(u *url.URL) ([]byte, error) {
 	return body, nil
 }
 
-// doReq executes an HTTP doReq. The bool indicates whether it's a retriable error.
-func (h *HTTPClient) doReq(method, rURL string, reqBody []byte, headers http.Header) (respBody []byte, retry bool, statusCode int, retErr error) {
+// DoReq executes an HTTP request. The bool indicates whether it's a retriable error.
+func (h *HTTPClient) DoReq(method, rURL string, reqBody []byte, headers http.Header) (respBody []byte, retry bool, statusCode int, retErr error) {
 	var (
 		err      error
 		postBody io.Reader
@@ -143,19 +143,20 @@ func (h *HTTPClient) doReq(method, rURL string, reqBody []byte, headers http.Hea
 	if err != nil {
 		return nil, true, 0, err
 	}
+
 	defer func() {
 		// Drain and close the body to let the Transport reuse the connection
 		io.Copy(io.Discard, r.Body)
 		r.Body.Close()
 	}()
 
-	if r.StatusCode != http.StatusOK {
-		return nil, false, r.StatusCode, fmt.Errorf("%s returned %d", rURL, r.StatusCode)
-	}
-
 	body, err := io.ReadAll(io.LimitReader(r.Body, h.opt.MaxBytes))
 	if err != nil {
 		return nil, true, http.StatusOK, err
+	}
+
+	if r.StatusCode > 299 {
+		return body, false, r.StatusCode, fmt.Errorf("error: %s returned %d", rURL, r.StatusCode)
 	}
 
 	return body, false, http.StatusOK, nil
