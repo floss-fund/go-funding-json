@@ -175,6 +175,8 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV12(in *jlexer.
 			continue
 		}
 		switch key {
+		case "id":
+			out.ID = string(in.String())
 		case "name":
 			out.Name = string(in.String())
 		case "description":
@@ -244,8 +246,13 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV12(out *jwrite
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"name\":"
+		const prefix string = ",\"id\":"
 		out.RawString(prefix[1:])
+		out.String(string(in.ID))
+	}
+	{
+		const prefix string = ",\"name\":"
+		out.RawString(prefix)
 		out.String(string(in.Name))
 	}
 	{
@@ -560,7 +567,7 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV15(in *jlexer.
 		case "projects":
 			(out.Projects).UnmarshalEasyJSON(in)
 		case "funding":
-			easyjsonD2b7633eDecode(in, &out.Funding)
+			(out.Funding).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -598,7 +605,7 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV15(out *jwrite
 	{
 		const prefix string = ",\"funding\":"
 		out.RawString(prefix)
-		easyjsonD2b7633eEncode(out, in.Funding)
+		(in.Funding).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -625,70 +632,6 @@ func (v *Manifest) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Manifest) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV15(l, v)
-}
-func easyjsonD2b7633eDecode(in *jlexer.Lexer, out *struct {
-	Channels Channels `json:"channels"`
-	Plans    Plans    `json:"plans"`
-	History  History  `json:"history"`
-}) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "channels":
-			(out.Channels).UnmarshalEasyJSON(in)
-		case "plans":
-			(out.Plans).UnmarshalEasyJSON(in)
-		case "history":
-			(out.History).UnmarshalEasyJSON(in)
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjsonD2b7633eEncode(out *jwriter.Writer, in struct {
-	Channels Channels `json:"channels"`
-	Plans    Plans    `json:"plans"`
-	History  History  `json:"history"`
-}) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"channels\":"
-		out.RawString(prefix[1:])
-		(in.Channels).MarshalEasyJSON(out)
-	}
-	{
-		const prefix string = ",\"plans\":"
-		out.RawString(prefix)
-		(in.Plans).MarshalEasyJSON(out)
-	}
-	{
-		const prefix string = ",\"history\":"
-		out.RawString(prefix)
-		(in.History).MarshalEasyJSON(out)
-	}
-	out.RawByte('}')
 }
 func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV16(in *jlexer.Lexer, out *HistoryItem) {
 	isTopLevel := in.IsStart()
@@ -843,7 +786,87 @@ func (v *History) UnmarshalJSON(data []byte) error {
 func (v *History) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV17(l, v)
 }
-func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV18(in *jlexer.Lexer, out *Entity) {
+func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV18(in *jlexer.Lexer, out *Funding) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "channels":
+			(out.Channels).UnmarshalEasyJSON(in)
+		case "plans":
+			(out.Plans).UnmarshalEasyJSON(in)
+		case "history":
+			(out.History).UnmarshalEasyJSON(in)
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV18(out *jwriter.Writer, in Funding) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"channels\":"
+		out.RawString(prefix[1:])
+		(in.Channels).MarshalEasyJSON(out)
+	}
+	{
+		const prefix string = ",\"plans\":"
+		out.RawString(prefix)
+		(in.Plans).MarshalEasyJSON(out)
+	}
+	{
+		const prefix string = ",\"history\":"
+		out.RawString(prefix)
+		(in.History).MarshalEasyJSON(out)
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v Funding) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{FloatFmt: ""}
+	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV18(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v Funding) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV18(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *Funding) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV18(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *Funding) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV18(l, v)
+}
+func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV19(in *jlexer.Lexer, out *Entity) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -884,7 +907,7 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV18(in *jlexer.
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV18(out *jwriter.Writer, in Entity) {
+func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV19(out *jwriter.Writer, in Entity) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -924,27 +947,27 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV18(out *jwrite
 // MarshalJSON supports json.Marshaler interface
 func (v Entity) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{FloatFmt: ""}
-	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV18(&w, v)
+	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV19(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Entity) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV18(w, v)
+	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV19(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Entity) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV18(&r, v)
+	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV19(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Entity) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV18(l, v)
+	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV19(l, v)
 }
-func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV19(in *jlexer.Lexer, out *Channels) {
+func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV110(in *jlexer.Lexer, out *Channels) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		in.Skip()
@@ -972,7 +995,7 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV19(in *jlexer.
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV19(out *jwriter.Writer, in Channels) {
+func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV110(out *jwriter.Writer, in Channels) {
 	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 		out.RawString("null")
 	} else {
@@ -990,27 +1013,27 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV19(out *jwrite
 // MarshalJSON supports json.Marshaler interface
 func (v Channels) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{FloatFmt: ""}
-	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV19(&w, v)
+	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV110(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Channels) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV19(w, v)
+	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV110(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Channels) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV19(&r, v)
+	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV110(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Channels) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV19(l, v)
+	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV110(l, v)
 }
-func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV110(in *jlexer.Lexer, out *Channel) {
+func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV111(in *jlexer.Lexer, out *Channel) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1047,7 +1070,7 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV110(in *jlexer
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV110(out *jwriter.Writer, in Channel) {
+func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV111(out *jwriter.Writer, in Channel) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1077,23 +1100,23 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV110(out *jwrit
 // MarshalJSON supports json.Marshaler interface
 func (v Channel) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{FloatFmt: ""}
-	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV110(&w, v)
+	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV111(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Channel) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV110(w, v)
+	easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV111(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Channel) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV110(&r, v)
+	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV111(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Channel) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV110(l, v)
+	easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV111(l, v)
 }

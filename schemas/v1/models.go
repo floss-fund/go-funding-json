@@ -38,6 +38,7 @@ type Entity struct {
 //
 //easyjson:json
 type Project struct {
+	ID            string   `json:"id"`
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
 	WebpageURL    URL      `json:"webpageUrl"`
@@ -92,18 +93,22 @@ type HistoryItem struct {
 // easyjson:json
 type History []HistoryItem
 
+// easyjson:json
+type Funding struct {
+	Channels Channels `json:"channels"`
+	Plans    Plans    `json:"plans"`
+	History  History  `json:"history"`
+}
+
 //easyjson:json
 type Manifest struct {
 	// This is added internally and is not expected in the manifest itself.
-	URL URL `json:"-" db:"-"`
+	URL  URL    `json:"-" db:"-"`
+	ID   int    `json:"-" db:"id"`
+	UUID string `json:"-" db:"_id"`
 
 	Version  string   `json:"version"`
 	Entity   Entity   `json:"entity"`
 	Projects Projects `json:"projects"`
-
-	Funding struct {
-		Channels Channels `json:"channels"`
-		Plans    Plans    `json:"plans"`
-		History  History  `json:"history"`
-	} `json:"funding"`
+	Funding  Funding  `json:"funding"`
 }

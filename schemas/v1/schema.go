@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/floss-fund/go-funding-json/common"
@@ -126,14 +127,22 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	}
 
 	// Projects.
+	ids := make([]string, 0, len(m.Projects))
 	for n, o := range m.Projects {
 		if o, err = s.ValidateProject(o, n, mURL); err != nil {
 			return m, err
 		}
 		m.Projects[n] = o
+		ids = append(ids, o.ID)
+	}
+
+	// Ensure that IDs are unique.
+	if s := slices.Compact(ids); len(s) != len(ids) {
+		return m, errors.New("projects[].id must be unique")
 	}
 
 	// Funding channels.
+	ids = make([]string, 0, len(m.Funding.Channels))
 	chIDs := make(map[string]struct{})
 	for n, o := range m.Funding.Channels {
 		if o, err = s.ValidateChannel(o, n); err != nil {
@@ -142,6 +151,11 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 
 		m.Funding.Channels[n] = o
 		chIDs[o.ID] = struct{}{}
+		ids = append(ids, o.ID)
+	}
+	// Ensure that IDs are unique.
+	if s := slices.Compact(ids); len(s) != len(ids) {
+		return m, errors.New("projects[].id must be unique")
 	}
 
 	// Funding plans.
@@ -204,6 +218,10 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 }
 
 func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, error) {
+	if err := common.IsID(fmt.Sprintf("projects[%d].id", n), o.ID, 3, 32); err != nil {
+		return o, err
+	}
+
 	if err := common.InRange[int](fmt.Sprintf("projects[%d].name", n), len(o.Name), 1, 256); err != nil {
 		return o, err
 	}
@@ -230,8 +248,12 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		o.RepositoryUrl.WellKnown = ""
 	}
 
-	// License.
-	licenseTag := fmt.Sprintf("projects[%d].license", n)
+	// Licenses.
+	licenseTag := fmt.Sprintf("projects[%d].licenses", n)
+	if len(o.Licenses) < 1 {
+		return o, fmt.Errorf("`%s` should not be empty", licenseTag)
+	}
+
 	for _, l := range o.Licenses {
 		if err := common.InRange[int](licenseTag, len(l), 2, 64); err != nil {
 			return o, err
