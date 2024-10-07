@@ -71,7 +71,7 @@ func (h *HTTPClient) Get(u *url.URL) ([]byte, error) {
 
 	// Retry N times.
 	for n := 0; n < h.opt.Retries; n++ {
-		body, retry, statusCode, err = h.DoReq(http.MethodGet, u.String(), nil, h.headers)
+		body, _, retry, statusCode, err = h.DoReq(http.MethodGet, u.String(), nil, h.headers)
 		if err == nil || !retry {
 			break
 		}
@@ -93,8 +93,46 @@ func (h *HTTPClient) Get(u *url.URL) ([]byte, error) {
 	return body, nil
 }
 
+// Head fetches the metadata (HEAD) request of a given URL.
+func (h *HTTPClient) Head(u *url.URL) (http.Header, error) {
+	var (
+		hdr        http.Header
+		err        error
+		statusCode int
+		retry      bool
+	)
+
+	// Host is disabled due to rate limiting.
+	if _, ok := h.rateLimited[u.Host]; ok {
+		return nil, ErrRatelimited
+	}
+
+	// Retry N times.
+	for n := 0; n < h.opt.Retries; n++ {
+		_, hdr, retry, statusCode, err = h.DoReq(http.MethodHead, u.String(), nil, h.headers)
+		if err == nil || !retry {
+			break
+		}
+
+		// If the host sent a 429, don't send any more requests.
+		if h.opt.SkipRateLimitedHost && statusCode == http.StatusTooManyRequests {
+			h.rateLimited[u.Host] = struct{}{}
+			return nil, ErrRatelimited
+		}
+
+		if h.opt.Retries > 1 {
+			time.Sleep(h.opt.RetryWait)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return hdr, nil
+}
+
 // DoReq executes an HTTP request. The bool indicates whether it's a retriable error.
-func (h *HTTPClient) DoReq(method, rURL string, reqBody []byte, headers http.Header) (respBody []byte, retry bool, statusCode int, retErr error) {
+func (h *HTTPClient) DoReq(method, rURL string, reqBody []byte, headers http.Header) (respBody []byte, hdr http.Header, retry bool, statusCode int, retErr error) {
 	var (
 		err      error
 		postBody io.Reader
@@ -118,7 +156,7 @@ func (h *HTTPClient) DoReq(method, rURL string, reqBody []byte, headers http.Hea
 
 	req, err := http.NewRequest(method, rURL, postBody)
 	if err != nil {
-		return nil, true, 0, err
+		return nil, nil, true, 0, err
 	}
 
 	if headers != nil {
@@ -141,7 +179,7 @@ func (h *HTTPClient) DoReq(method, rURL string, reqBody []byte, headers http.Hea
 
 	r, err := h.client.Do(req)
 	if err != nil {
-		return nil, true, 0, err
+		return nil, nil, true, 0, err
 	}
 
 	defer func() {
@@ -152,12 +190,12 @@ func (h *HTTPClient) DoReq(method, rURL string, reqBody []byte, headers http.Hea
 
 	body, err := io.ReadAll(io.LimitReader(r.Body, h.opt.MaxBytes))
 	if err != nil {
-		return nil, true, http.StatusOK, err
+		return nil, nil, true, http.StatusOK, err
 	}
 
 	if r.StatusCode > 299 {
-		return body, false, r.StatusCode, fmt.Errorf("error: %s returned %d", rURL, r.StatusCode)
+		return body, r.Header, false, r.StatusCode, fmt.Errorf("error: %s returned %d", rURL, r.StatusCode)
 	}
 
-	return body, false, http.StatusOK, nil
+	return body, r.Header, false, http.StatusOK, nil
 }

@@ -103,9 +103,7 @@ type Funding struct {
 //easyjson:json
 type Manifest struct {
 	// This is added internally and is not expected in the manifest itself.
-	URL  URL    `json:"-" db:"-"`
-	ID   int    `json:"-" db:"id"`
-	UUID string `json:"-" db:"_id"`
+	URL URL `json:"-" db:"-"`
 
 	Version  string   `json:"version"`
 	Entity   Entity   `json:"entity"`
