@@ -127,6 +127,10 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	}
 
 	// Projects.
+	if err := common.InRange[int]("projects", len(m.Projects), 1, 30); err != nil {
+		return m, err
+	}
+
 	ids := make([]string, 0, len(m.Projects))
 	for n, o := range m.Projects {
 		if o, err = s.ValidateProject(o, n, mURL); err != nil {
@@ -142,6 +146,10 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	}
 
 	// Funding channels.
+	if err := common.InRange[int]("funding.channels", len(m.Funding.Channels), 1, 10); err != nil {
+		return m, err
+	}
+
 	ids = make([]string, 0, len(m.Funding.Channels))
 	chIDs := make(map[string]struct{})
 	for n, o := range m.Funding.Channels {
@@ -153,13 +161,14 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 		chIDs[o.ID] = struct{}{}
 		ids = append(ids, o.ID)
 	}
+
 	// Ensure that IDs are unique.
 	if s := slices.Compact(ids); len(s) != len(ids) {
 		return m, errors.New("projects[].id must be unique")
 	}
 
 	// Funding plans.
-	if err := common.InRange[int]("plans", len(m.Funding.Plans), 1, 30); err != nil {
+	if err := common.InRange[int]("funding.plans", len(m.Funding.Plans), 1, 10); err != nil {
 		return m, err
 	}
 	for n, o := range m.Funding.Plans {
