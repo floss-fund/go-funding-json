@@ -38,7 +38,7 @@ type Entity struct {
 //
 //easyjson:json
 type Project struct {
-	ID            string   `json:"id"`
+	GUID          string   `json:"guid"`
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
 	WebpageURL    URL      `json:"webpageUrl"`
@@ -54,7 +54,7 @@ type Projects []Project
 //
 //easyjson:json
 type Channel struct {
-	ID          string `json:"id"`
+	GUID        string `json:"guid"`
 	Type        string `json:"type"`
 	Address     string `json:"address"`
 	Description string `json:"description"`
@@ -67,7 +67,7 @@ type Channels []Channel
 //
 //easyjson:json
 type Plan struct {
-	ID          string   `json:"id"`
+	GUID        string   `json:"guid"`
 	Status      string   `json:"status"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`

@@ -137,12 +137,12 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 			return m, err
 		}
 		m.Projects[n] = o
-		ids = append(ids, o.ID)
+		ids = append(ids, o.GUID)
 	}
 
 	// Ensure that IDs are unique.
 	if s := slices.Compact(ids); len(s) != len(ids) {
-		return m, errors.New("projects[].id must be unique")
+		return m, errors.New("projects[].guid must be unique")
 	}
 
 	// Funding channels.
@@ -158,13 +158,13 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 		}
 
 		m.Funding.Channels[n] = o
-		chIDs[o.ID] = struct{}{}
-		ids = append(ids, o.ID)
+		chIDs[o.GUID] = struct{}{}
+		ids = append(ids, o.GUID)
 	}
 
 	// Ensure that IDs are unique.
 	if s := slices.Compact(ids); len(s) != len(ids) {
-		return m, errors.New("projects[].id must be unique")
+		return m, errors.New("projects[].guid must be unique")
 	}
 
 	// Funding plans.
@@ -227,7 +227,7 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 }
 
 func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, error) {
-	if err := common.IsID(fmt.Sprintf("projects[%d].id", n), o.ID, 3, 32); err != nil {
+	if err := common.IsID(fmt.Sprintf("projects[%d].guid", n), o.GUID, 3, 32); err != nil {
 		return o, err
 	}
 
@@ -288,7 +288,7 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 }
 
 func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
-	if err := common.IsID(fmt.Sprintf("channels[%d].id", n), o.ID, 3, 32); err != nil {
+	if err := common.IsID(fmt.Sprintf("channels[%d].guid", n), o.GUID, 3, 32); err != nil {
 		return o, err
 	}
 
@@ -308,7 +308,7 @@ func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
 }
 
 func (s *Schema) ValidatePlan(o Plan, n int, channelIDs map[string]struct{}) (Plan, error) {
-	if err := common.IsID(fmt.Sprintf("plans[%d].id", n), o.ID, 3, 32); err != nil {
+	if err := common.IsID(fmt.Sprintf("plans[%d].guid", n), o.GUID, 3, 32); err != nil {
 		return o, err
 	}
 

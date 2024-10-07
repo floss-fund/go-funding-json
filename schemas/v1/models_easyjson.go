@@ -175,8 +175,8 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV12(in *jlexer.
 			continue
 		}
 		switch key {
-		case "id":
-			out.ID = string(in.String())
+		case "guid":
+			out.GUID = string(in.String())
 		case "name":
 			out.Name = string(in.String())
 		case "description":
@@ -246,9 +246,9 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV12(out *jwrite
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"id\":"
+		const prefix string = ",\"guid\":"
 		out.RawString(prefix[1:])
-		out.String(string(in.ID))
+		out.String(string(in.GUID))
 	}
 	{
 		const prefix string = ",\"name\":"
@@ -413,8 +413,8 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV14(in *jlexer.
 			continue
 		}
 		switch key {
-		case "id":
-			out.ID = string(in.String())
+		case "guid":
+			out.GUID = string(in.String())
 		case "status":
 			out.Status = string(in.String())
 		case "name":
@@ -465,9 +465,9 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV14(out *jwrite
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"id\":"
+		const prefix string = ",\"guid\":"
 		out.RawString(prefix[1:])
-		out.String(string(in.ID))
+		out.String(string(in.GUID))
 	}
 	{
 		const prefix string = ",\"status\":"
@@ -1052,8 +1052,8 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV111(in *jlexer
 			continue
 		}
 		switch key {
-		case "id":
-			out.ID = string(in.String())
+		case "guid":
+			out.GUID = string(in.String())
 		case "type":
 			out.Type = string(in.String())
 		case "address":
@@ -1075,9 +1075,9 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV111(out *jwrit
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"id\":"
+		const prefix string = ",\"guid\":"
 		out.RawString(prefix[1:])
-		out.String(string(in.ID))
+		out.String(string(in.GUID))
 	}
 	{
 		const prefix string = ",\"type\":"
