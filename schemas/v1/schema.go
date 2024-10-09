@@ -21,7 +21,7 @@ const (
 	// It should be backwards compatible be MajorVersion.
 	CurrentVersion = "v1.0.0"
 
-	maxUrlLen = 1024
+	maxUrlLen = 1000
 )
 
 // Schema represents the schema+parser+validator for a particular version.
@@ -78,7 +78,7 @@ func (s *Schema) ParseManifest(b []byte, manifestURL string, checkProvenance boo
 		}
 
 		// Project repository.
-		if err := parseURL(fmt.Sprintf("projects[%d].repositoryUrl", n), &m.Projects[n].RepositoryUrl); err != nil {
+		if err := parseURL(fmt.Sprintf("projects[%d].repositoryUrl", n), &m.Projects[n].RepositoryURL); err != nil {
 			return m, err
 		}
 	}
@@ -100,7 +100,7 @@ func (s *Schema) ParseManifest(b []byte, manifestURL string, checkProvenance boo
 			if err := s.CheckProvenance(o.WebpageURL, m.URL); err != nil {
 				return m, err
 			}
-			if err := s.CheckProvenance(o.RepositoryUrl, m.URL); err != nil {
+			if err := s.CheckProvenance(o.RepositoryURL, m.URL); err != nil {
 				return m, err
 			}
 		}
@@ -201,15 +201,19 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int]("entity.name", len(o.Name), 2, 256); err != nil {
+	if err := common.InRange[int]("entity.name", len(o.Name), 2, 250); err != nil {
 		return o, err
 	}
 
-	if err := common.IsEmail("entity.email", o.Email, 256); err != nil {
+	if err := common.IsEmail("entity.email", o.Email, 250); err != nil {
 		return o, err
 	}
 
 	if err := common.InRange[int]("entity.phone", len(o.Phone), 0, 32); err != nil {
+		return o, err
+	}
+
+	if err := common.InRange[int]("entity.description", len(o.Description), 5, 2000); err != nil {
 		return o, err
 	}
 
@@ -231,11 +235,11 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].name", n), len(o.Name), 1, 256); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].name", n), len(o.Name), 1, 250); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 5, 2056); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 5, 2000); err != nil {
 		return o, err
 	}
 
@@ -248,21 +252,21 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		o.WebpageURL.WellKnown = ""
 	}
 
-	wkRequired, err = common.WellKnownURL(fmt.Sprintf("projects[%d].repositoryUrl", n), manifest, o.RepositoryUrl.URLobj, o.RepositoryUrl.WellKnownObj, s.opt.WellKnownURI)
+	wkRequired, err = common.WellKnownURL(fmt.Sprintf("projects[%d].repositoryUrl", n), manifest, o.RepositoryURL.URLobj, o.RepositoryURL.WellKnownObj, s.opt.WellKnownURI)
 	if err != nil {
 		return o, err
 	}
 	if !wkRequired {
-		o.RepositoryUrl.WellKnownObj = nil
-		o.RepositoryUrl.WellKnown = ""
+		o.RepositoryURL.WellKnownObj = nil
+		o.RepositoryURL.WellKnown = ""
 	}
 
 	// Licenses.
-	licenseTag := fmt.Sprintf("projects[%d].licenses", n)
-	if len(o.Licenses) < 1 {
-		return o, fmt.Errorf("`%s` should not be empty", licenseTag)
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].licenses", n), len(o.Licenses), 1, 5); err != nil {
+		return o, err
 	}
 
+	licenseTag := fmt.Sprintf("projects[%d].licenses", n)
 	for _, l := range o.Licenses {
 		if err := common.InRange[int](licenseTag, len(l), 2, 64); err != nil {
 			return o, err
@@ -296,11 +300,11 @@ func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%d].address", n), len(o.Address), 0, 512); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%d].address", n), len(o.Address), 0, 500); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%d].description", n), len(o.Description), 0, 512); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%d].description", n), len(o.Description), 0, 500); err != nil {
 		return o, err
 	}
 
@@ -316,11 +320,11 @@ func (s *Schema) ValidatePlan(o Plan, n int, channelIDs map[string]struct{}) (Pl
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("plans[%d].name", n), len(o.Name), 3, 256); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("plans[%d].name", n), len(o.Name), 3, 250); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("plans[%d].description", n), len(o.Description), 0, 512); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("plans[%d].description", n), len(o.Description), 0, 500); err != nil {
 		return o, err
 	}
 
