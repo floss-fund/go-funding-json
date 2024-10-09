@@ -26,12 +26,13 @@ type URL struct {
 //
 //easyjson:json
 type Entity struct {
-	Type       string `json:"type"`
-	Role       string `json:"role"`
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	Phone      string `json:"phone"`
-	WebpageURL URL    `json:"webpageUrl"`
+	Type        string `json:"type"`
+	Role        string `json:"role"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
+	Description string `json:"description"`
+	WebpageURL  URL    `json:"webpageUrl"`
 }
 
 // Project represents a FOSS project.
@@ -42,7 +43,7 @@ type Project struct {
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
 	WebpageURL    URL      `json:"webpageUrl"`
-	RepositoryUrl URL      `json:"repositoryUrl"`
+	RepositoryURL URL      `json:"repositoryUrl"`
 	Licenses      []string `json:"licenses"`
 	Tags          []string `json:"tags"`
 }

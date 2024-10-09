@@ -184,7 +184,7 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV12(in *jlexer.
 		case "webpageUrl":
 			(out.WebpageURL).UnmarshalEasyJSON(in)
 		case "repositoryUrl":
-			(out.RepositoryUrl).UnmarshalEasyJSON(in)
+			(out.RepositoryURL).UnmarshalEasyJSON(in)
 		case "licenses":
 			if in.IsNull() {
 				in.Skip()
@@ -268,7 +268,7 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV12(out *jwrite
 	{
 		const prefix string = ",\"repositoryUrl\":"
 		out.RawString(prefix)
-		(in.RepositoryUrl).MarshalEasyJSON(out)
+		(in.RepositoryURL).MarshalEasyJSON(out)
 	}
 	{
 		const prefix string = ",\"licenses\":"
@@ -895,6 +895,8 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV19(in *jlexer.
 			out.Email = string(in.String())
 		case "phone":
 			out.Phone = string(in.String())
+		case "description":
+			out.Description = string(in.String())
 		case "webpageUrl":
 			(out.WebpageURL).UnmarshalEasyJSON(in)
 		default:
@@ -935,6 +937,11 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV19(out *jwrite
 		const prefix string = ",\"phone\":"
 		out.RawString(prefix)
 		out.String(string(in.Phone))
+	}
+	{
+		const prefix string = ",\"description\":"
+		out.RawString(prefix)
+		out.String(string(in.Description))
 	}
 	{
 		const prefix string = ",\"webpageUrl\":"
