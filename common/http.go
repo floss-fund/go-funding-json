@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"time"
@@ -194,7 +195,7 @@ func (h *HTTPClient) DoReq(method, rURL string, reqBody []byte, headers http.Hea
 	}
 
 	if r.StatusCode > 299 {
-		return body, r.Header, false, r.StatusCode, fmt.Errorf("error: %s returned %d", rURL, r.StatusCode)
+		return body, r.Header, false, r.StatusCode, fmt.Errorf("error: %s returned %d: %s", rURL, r.StatusCode, body[0:int(math.Min(512, float64(len(body))))])
 	}
 
 	return body, r.Header, false, http.StatusOK, nil
