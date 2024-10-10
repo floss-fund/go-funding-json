@@ -21,7 +21,7 @@ const (
 	// It should be backwards compatible be MajorVersion.
 	CurrentVersion = "v1.0.0"
 
-	maxUrlLen = 1000
+	MaxURLLen = 250
 )
 
 // Schema represents the schema+parser+validator for a particular version.
@@ -115,7 +115,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 		return m, fmt.Errorf("major version should be %s (current version is %s)", MajorVersion, CurrentVersion)
 	}
 
-	mURL, err := common.IsURL("manifest URL", m.URL.URL, maxUrlLen)
+	mURL, err := common.IsURL("manifest URL", m.URL.URL, MaxURLLen)
 	if err != nil {
 		return m, err
 	}
@@ -362,7 +362,7 @@ func (s *Schema) ValidateHistory(o HistoryItem, n int) (HistoryItem, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 0, maxUrlLen); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 0, MaxURLLen); err != nil {
 		return o, err
 	}
 
@@ -399,7 +399,7 @@ func (s *Schema) CheckProvenance(u URL, manifest URL) error {
 func parseURL(tag string, u *URL) error {
 	{
 
-		p, err := common.IsURL(tag, u.URL, maxUrlLen)
+		p, err := common.IsURL(tag, u.URL, MaxURLLen)
 		if err != nil {
 			return err
 		}
@@ -413,7 +413,7 @@ func parseURL(tag string, u *URL) error {
 	}
 
 	if u.WellKnown != "" {
-		p, err := common.IsURL(tag, u.WellKnown, maxUrlLen)
+		p, err := common.IsURL(tag, u.WellKnown, MaxURLLen)
 		if err != nil {
 			return err
 		}
