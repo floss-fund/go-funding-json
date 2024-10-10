@@ -88,6 +88,8 @@ type HistoryItem struct {
 	Year        int     `json:"year"`
 	Income      float64 `json:"income"`
 	Expenses    float64 `json:"expenses"`
+	Taxes       float64 `json:"taxes"`
+	Currency    string  `json:"currency"`
 	Description string  `json:"description"`
 }
 

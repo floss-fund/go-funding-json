@@ -300,7 +300,7 @@ func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%d].address", n), len(o.Address), 0, 500); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%d].address", n), len(o.Address), 0, 250); err != nil {
 		return o, err
 	}
 
@@ -354,15 +354,19 @@ func (s *Schema) ValidateHistory(o HistoryItem, n int) (HistoryItem, error) {
 		return o, err
 	}
 
-	if err := common.InRange[float64](fmt.Sprintf("plans[%d].income", n), o.Income, 0, 1000000000); err != nil {
+	if err := common.InRange[float64](fmt.Sprintf("history[%d].income", n), o.Income, 0, 1000000000); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[float64](fmt.Sprintf("plans[%d].expenses", n), o.Expenses, 0, 1000000000); err != nil {
+	if err := common.InRange[float64](fmt.Sprintf("history[%d].expenses", n), o.Expenses, 0, 1000000000); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 0, MaxURLLen); err != nil {
+	if err := common.InMap(fmt.Sprintf("history[%d].currency", n), "currencies list", o.Currency, s.opt.Currencies); err != nil {
+		return o, err
+	}
+
+	if err := common.InRange[int](fmt.Sprintf("history[%d].description", n), len(o.Description), 0, 500); err != nil {
 		return o, err
 	}
 

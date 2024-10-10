@@ -658,6 +658,10 @@ func easyjsonD2b7633eDecodeGithubComFlossFundGoFundingJsonSchemasV16(in *jlexer.
 			out.Income = float64(in.Float64())
 		case "expenses":
 			out.Expenses = float64(in.Float64())
+		case "taxes":
+			out.Taxes = float64(in.Float64())
+		case "currency":
+			out.Currency = string(in.String())
 		case "description":
 			out.Description = string(in.String())
 		default:
@@ -688,6 +692,16 @@ func easyjsonD2b7633eEncodeGithubComFlossFundGoFundingJsonSchemasV16(out *jwrite
 		const prefix string = ",\"expenses\":"
 		out.RawString(prefix)
 		out.Float64(float64(in.Expenses))
+	}
+	{
+		const prefix string = ",\"taxes\":"
+		out.RawString(prefix)
+		out.Float64(float64(in.Taxes))
+	}
+	{
+		const prefix string = ",\"currency\":"
+		out.RawString(prefix)
+		out.String(string(in.Currency))
 	}
 	{
 		const prefix string = ",\"description\":"
