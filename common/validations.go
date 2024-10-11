@@ -13,7 +13,7 @@ import (
 const manifestFile = "funding.json"
 
 var (
-	reTag   = regexp.MustCompile(`^\p{L}([\p{L}\d-]+)?\p{L}$`)
+	reTag   = regexp.MustCompile(`^\p{L}(?:[\p{L}\d]*(?:-[\p{L}\d]+)*)\p{L}$`)
 	reID    = regexp.MustCompile(`^[a-z0-9]([[a-z\d-]+)?[a-z0-9]$`)
 	rePhone = regexp.MustCompile(`^\+?(\d+-)*\d+$`)
 )
@@ -169,14 +169,8 @@ func IsTag(tag string, val string, min, max int) error {
 		return err
 	}
 
-	err := fmt.Errorf("%s should be lowercase alpha-numeric-dashes and length %d - %d", tag, min, max)
-
 	if !reTag.MatchString(val) {
-		return err
-	}
-
-	if strings.Contains(val, "--") {
-		return err
+		return fmt.Errorf("%s should be lowercase alpha-numeric-dashes and length %d - %d", tag, min, max)
 	}
 
 	return nil
