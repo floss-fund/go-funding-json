@@ -13,8 +13,9 @@ import (
 const manifestFile = "funding.json"
 
 var (
-	reTag = regexp.MustCompile(`^\p{L}([\p{L}\d-]+)?\p{L}$`)
-	reID  = regexp.MustCompile(`^[a-z0-9]([[a-z\d-]+)?[a-z0-9]$`)
+	reTag   = regexp.MustCompile(`^\p{L}([\p{L}\d-]+)?\p{L}$`)
+	reID    = regexp.MustCompile(`^[a-z0-9]([[a-z\d-]+)?[a-z0-9]$`)
+	rePhone = regexp.MustCompile(`^\+?(\d+-)*\d+$`)
 )
 
 // InRange checks whether the given number > min and < max.
@@ -193,6 +194,15 @@ func IsID(tag string, val string, min, max int) error {
 	}
 
 	if strings.Contains(val, "--") {
+		return err
+	}
+
+	return nil
+}
+
+func IsPhone(tag string, val string) error {
+	if len(val) > 32 || !reID.MatchString(val) {
+		err := fmt.Errorf("%s should only have numbers and optional dashes and max length 32", tag)
 		return err
 	}
 
