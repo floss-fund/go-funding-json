@@ -195,7 +195,7 @@ func IsID(tag string, val string, min, max int) error {
 }
 
 func IsPhone(tag string, val string) error {
-	if len(val) > 32 || !reID.MatchString(val) {
+	if len(val) > 32 || !rePhone.MatchString(val) {
 		err := fmt.Errorf("%s should only have numbers and optional dashes and max length 32", tag)
 		return err
 	}
