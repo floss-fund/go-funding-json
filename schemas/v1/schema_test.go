@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/floss-fund/go-funding-json/common"
@@ -66,4 +67,25 @@ func TestWellKnownURL(t *testing.T) {
 	f(m, URL{URL: "https://github.com/user2/project"}, true)
 	f(m, URL{URL: "https://github.com/user/project"}, false)
 	f(m, URL{URL: "https://github.com/user/project/../../test"}, true)
+}
+
+func TestTransformURLs(t *testing.T) {
+	f := func(src, target string, match bool) {
+		t.Helper()
+
+		u, err := url.Parse(src)
+		assert.NoError(t, err)
+
+		u2 := transformProvenanceURL(u)
+		if match {
+			assert.Equal(t, u2.String(), target)
+		} else {
+			assert.NotEqual(t, u2.String(), target)
+		}
+	}
+
+	f("https://github.com/user/project/blob/master/funding.json", "https://github.com/user/project/blob/master/funding.json?raw=true", true)
+	f("https://github.com/user/project/blob/master/funding-manifest-urls", "https://github.com/user/project/blob/master/funding-manifest-urls?raw=true", true)
+	f("https://github.com/user/project/blob/main/funding-manifest-urls", "https://github.com/user/project/blob/main/funding-manifest-urls?raw=true", true)
+	f("https://github.com/user/project/blob/main/sub/folder/funding-manifest-urls", "https://github.com/user/project/blob/main/sub/folder/funding-manifest-urls?raw=true", false)
 }

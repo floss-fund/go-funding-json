@@ -71,7 +71,7 @@ func (h *HTTPClient) Get(u *url.URL) ([]byte, error) {
 
 	// Retry N times.
 	for n := 0; n < h.opt.Retries; n++ {
-		body, _, retry, statusCode, err = h.DoReq(http.MethodGet, u.String(), nil, h.headers)
+		body, _, retry, statusCode, err = h.DoReq(http.MethodGet, u.String(), []byte(u.RawQuery), h.headers)
 		if err == nil || !retry {
 			break
 		}

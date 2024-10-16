@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -42,6 +43,8 @@ type Opt struct {
 
 	WellKnownURI string
 }
+
+var reGithub = regexp.MustCompile(`^https://github\.com/([^/]+)/([^/]+)/blob/([^/]+)/(\.well-known/)?(funding-manifest-urls|funding.json)$`)
 
 // New returns a new instance of Schema.
 func New(opt *Opt, hOpt common.HTTPOpt, l *log.Logger) *Schema {
@@ -382,7 +385,7 @@ func (s *Schema) CheckProvenance(u URL, manifest URL) error {
 		return nil
 	}
 
-	body, err := s.hc.Get(u.WellKnownObj)
+	body, err := s.hc.Get(transformProvenanceURL(u.WellKnownObj))
 	if err != nil {
 		return err
 	}
@@ -433,4 +436,15 @@ func parseURL(tag string, u *URL) error {
 	}
 
 	return nil
+}
+
+func transformProvenanceURL(u *url.URL) *url.URL {
+	// It's a GitHub repo URL. Append it with "?raw=true" to access the raw contents.
+	if reGithub.MatchString(u.String()) {
+		if u2, err := url.Parse(u.String() + "?raw=true"); err == nil {
+			return u2
+		}
+	}
+
+	return u
 }
