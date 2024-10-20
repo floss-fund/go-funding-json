@@ -76,7 +76,7 @@ func TestTransformURLs(t *testing.T) {
 		u, err := url.Parse(src)
 		assert.NoError(t, err)
 
-		u2 := transformProvenanceURL(u)
+		u2 := TransformURLOrigin(u)
 		if match {
 			assert.Equal(t, u2.String(), target)
 		} else {
