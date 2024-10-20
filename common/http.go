@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"time"
 )
 
@@ -31,6 +32,8 @@ type HTTPClient struct {
 }
 
 var (
+	reGithub = regexp.MustCompile(`^https://github\.com/([^/]+)/([^/]+)/blob/([^/]+)/(\.well-known/)?(funding-manifest-urls|funding.json)$`)
+
 	ErrRatelimited = errors.New("host rate limited the request")
 )
 
@@ -198,4 +201,21 @@ func (h *HTTPClient) DoReq(method, rURL string, reqBody []byte, headers http.Hea
 	}
 
 	return body, r.Header, false, http.StatusOK, nil
+}
+
+// TransformURLOrigin takes a URL and (optionally) returns a transformed URL which may be
+// structurally different or may have a whole different FQDN. This is based on a custom map
+// and ruleset for popular URLs like github.com/user/blob/main/funding.json, which is a legitimate,
+// widely used, qualified URL, but it returns an HTML view instead of the original file.
+// This function returns an alternate, authoritative URL that points to the resource directly,
+// for instance, attaching `?raw=true` on a GitHub URL which redirects to the raw resource.
+func TransformURLOrigin(u *url.URL) *url.URL {
+	// It's a GitHub repo URL. Append it with "?raw=true" to access the raw contents.
+	if reGithub.MatchString(u.String()) {
+		if u2, err := url.Parse(u.String() + "?raw=true"); err == nil {
+			return u2
+		}
+	}
+
+	return u
 }
