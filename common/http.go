@@ -32,7 +32,7 @@ type HTTPClient struct {
 }
 
 var (
-	reGithub = regexp.MustCompile(`^https://github\.com/([^/]+)/([^/]+)/(blob|raw)/([^/]+)/(\.well-known/)?(funding-manifest-urls|funding.json)$`)
+	reGithub = regexp.MustCompile(`^https://github\.com/([^/]+)/([^/]+)/(blob|raw)/(.+?)/(\.well-known/)?(funding-manifest-urls|funding.json)$`)
 
 	ErrRatelimited = errors.New("host rate limited the request")
 )
