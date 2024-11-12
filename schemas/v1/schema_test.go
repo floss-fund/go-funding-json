@@ -66,4 +66,8 @@ func TestWellKnownURL(t *testing.T) {
 	f(m, URL{URL: "https://github.com/user2/project"}, true)
 	f(m, URL{URL: "https://github.com/user/project"}, false)
 	f(m, URL{URL: "https://github.com/user/project/../../test"}, true)
+
+	m = URL{URL: "https://github.com/user/project/blob/main/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://github.com/user/project", WellKnown: "https://github.com/user/project/blob/main/.well-known/funding-manifest-urls"}, false)
 }

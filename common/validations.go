@@ -96,12 +96,12 @@ func WellKnownURL(tag string, manifestURL *url.URL, target, wellKnown *url.URL, 
 
 	var (
 		// Get the paths are suffix them with "/" for checking using HasPrefix later.
-		mfPath = strings.TrimRight(strings.TrimRight(manifestURL.Path, manifestFile), "/") + "/"
-		tgPath = strings.TrimRight(target.Path, "/") + "/"
+		mfPath = strings.TrimSuffix(strings.TrimSuffix(manifestURL.Path, manifestFile), "/") + "/"
+		tgPath = strings.TrimSuffix(target.Path, "/") + "/"
 	)
 
 	// If the host + paths match, provenance is verified by default and there is no need for wellKnown.
-	if manifestURL.Host == target.Host {
+	if manifestURL.Host == target.Host && wellKnown == nil {
 		// manfiest is in the root of the domain, so all sub-paths are verified.
 		//  eg: site.com/funding.json ~= site.com/project
 		if mfPath == "/" {
@@ -130,8 +130,8 @@ func WellKnownURL(tag string, manifestURL *url.URL, target, wellKnown *url.URL, 
 	}
 
 	var (
-		wkPath   = strings.TrimRight(wellKnown.Path, "/")
-		isWKRoot = strings.TrimRight(wkPath, wellKnownURI) == ""
+		wkPath   = strings.TrimSuffix(wellKnown.Path, "/")
+		isWKRoot = strings.TrimSuffix(wkPath, wellKnownURI) == ""
 	)
 
 	// If wellKnown is at the root of the host, then all sub-paths are acceptable.
