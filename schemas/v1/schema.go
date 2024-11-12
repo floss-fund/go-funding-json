@@ -73,12 +73,12 @@ func (s *Schema) ParseManifest(b []byte, manifestURL string, checkProvenance boo
 	// Parse various URL strings to url.URL obijects.
 	for n := 0; n < len(m.Projects); n++ {
 		// Project webpage.
-		if err := parseURL(fmt.Sprintf("projects[%d].webpageUrl", n), &m.Projects[n].WebpageURL); err != nil {
+		if err := parseURL(fmt.Sprintf("projects[%s].webpageUrl", m.Projects[n].GUID), &m.Projects[n].WebpageURL); err != nil {
 			return m, err
 		}
 
 		// Project repository.
-		if err := parseURL(fmt.Sprintf("projects[%d].repositoryUrl", n), &m.Projects[n].RepositoryURL); err != nil {
+		if err := parseURL(fmt.Sprintf("projects[%s].repositoryUrl", m.Projects[n].GUID), &m.Projects[n].RepositoryURL); err != nil {
 			return m, err
 		}
 	}
@@ -233,19 +233,19 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 }
 
 func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, error) {
-	if err := common.IsID(fmt.Sprintf("projects[%d].guid", n), o.GUID, 3, 32); err != nil {
+	if err := common.IsID(fmt.Sprintf("projects[%s].guid", o.GUID), o.GUID, 3, 32); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].name", n), len(o.Name), 1, 250); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%s].name", o.GUID), len(o.Name), 1, 250); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].description", n), len(o.Description), 5, 2000); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%s].description", o.GUID), len(o.Description), 5, 2000); err != nil {
 		return o, err
 	}
 
-	wkRequired, err := common.WellKnownURL(fmt.Sprintf("projects[%d].webpageUrl", n), manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI)
+	wkRequired, err := common.WellKnownURL(fmt.Sprintf("projects[%s].webpageUrl", o.GUID), manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI)
 	if err != nil {
 		return o, err
 	}
@@ -254,7 +254,7 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		o.WebpageURL.WellKnown = ""
 	}
 
-	wkRequired, err = common.WellKnownURL(fmt.Sprintf("projects[%d].repositoryUrl", n), manifest, o.RepositoryURL.URLobj, o.RepositoryURL.WellKnownObj, s.opt.WellKnownURI)
+	wkRequired, err = common.WellKnownURL(fmt.Sprintf("projects[%s].repositoryUrl", o.GUID), manifest, o.RepositoryURL.URLobj, o.RepositoryURL.WellKnownObj, s.opt.WellKnownURI)
 	if err != nil {
 		return o, err
 	}
@@ -264,11 +264,11 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 	}
 
 	// Licenses.
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].licenses", n), len(o.Licenses), 1, 5); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%s].licenses", o.GUID), len(o.Licenses), 1, 5); err != nil {
 		return o, err
 	}
 
-	licenseTag := fmt.Sprintf("projects[%d].licenses", n)
+	licenseTag := fmt.Sprintf("projects[%s].licenses", o.GUID)
 	for _, l := range o.Licenses {
 		if err := common.InRange[int](licenseTag, len(l), 2, 64); err != nil {
 			return o, err
@@ -281,11 +281,11 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 	}
 
 	// Tags.
-	if err := common.InRange[int](fmt.Sprintf("projects[%d].tags", n), len(o.Tags), 1, 10); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("projects[%s].tags", o.GUID), len(o.Tags), 1, 10); err != nil {
 		return o, err
 	}
 	for i, t := range o.Tags {
-		if err := common.IsTag(fmt.Sprintf("projects[%d].tags[%d]", n, i), t, 2, 32); err != nil {
+		if err := common.IsTag(fmt.Sprintf("projects[%s].tags[%d]", o.GUID, i), t, 2, 32); err != nil {
 			return o, err
 		}
 	}
@@ -294,19 +294,19 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 }
 
 func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
-	if err := common.IsID(fmt.Sprintf("channels[%d].guid", n), o.GUID, 3, 32); err != nil {
+	if err := common.IsID(fmt.Sprintf("channels[%s].guid", o.GUID), o.GUID, 3, 32); err != nil {
 		return o, err
 	}
 
-	if err := common.InList(fmt.Sprintf("channels[%d].type", n), o.Type, ChannelTypes); err != nil {
+	if err := common.InList(fmt.Sprintf("channels[%s].type", o.GUID), o.Type, ChannelTypes); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%d].address", n), len(o.Address), 0, 250); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%s].address", o.GUID), len(o.Address), 0, 250); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%d].description", n), len(o.Description), 0, 500); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("channels[%s].description", o.GUID), len(o.Description), 0, 500); err != nil {
 		return o, err
 	}
 
@@ -314,37 +314,37 @@ func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
 }
 
 func (s *Schema) ValidatePlan(o Plan, n int, channelIDs map[string]struct{}) (Plan, error) {
-	if err := common.IsID(fmt.Sprintf("plans[%d].guid", n), o.GUID, 3, 32); err != nil {
+	if err := common.IsID(fmt.Sprintf("plans[%s].guid", o.GUID), o.GUID, 3, 32); err != nil {
 		return o, err
 	}
 
-	if err := common.InList(fmt.Sprintf("plans[%d].status", n), o.Status, PlanStatuses); err != nil {
+	if err := common.InList(fmt.Sprintf("plans[%s].status", o.GUID), o.Status, PlanStatuses); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("plans[%d].name", n), len(o.Name), 3, 250); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("plans[%s].name", o.GUID), len(o.Name), 3, 250); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("plans[%d].description", n), len(o.Description), 0, 500); err != nil {
+	if err := common.InRange[int](fmt.Sprintf("plans[%s].description", o.GUID), len(o.Description), 0, 500); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[float64](fmt.Sprintf("plans[%d].amount", n), o.Amount, 0, 1000000000); err != nil {
+	if err := common.InRange[float64](fmt.Sprintf("plans[%s].amount", o.GUID), o.Amount, 0, 1000000000); err != nil {
 		return o, err
 	}
 
-	if err := common.InMap(fmt.Sprintf("plans[%d].currency", n), "currencies list", o.Currency, s.opt.Currencies); err != nil {
+	if err := common.InMap(fmt.Sprintf("plans[%s].currency", o.GUID), "currencies list", o.Currency, s.opt.Currencies); err != nil {
 		return o, err
 	}
 
-	if err := common.InList(fmt.Sprintf("plans[%d].frequency", n), o.Frequency, PlanFrequencies); err != nil {
+	if err := common.InList(fmt.Sprintf("plans[%s].frequency", o.GUID), o.Frequency, PlanFrequencies); err != nil {
 		return o, err
 	}
 
 	for _, ch := range o.Channels {
 		if _, ok := channelIDs[ch]; !ok {
-			return o, fmt.Errorf("unknown channel id in plans[%d].frequency", n)
+			return o, fmt.Errorf("unknown channel id in plans[%s].frequency", o.GUID)
 		}
 	}
 
