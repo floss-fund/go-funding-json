@@ -127,7 +127,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	}
 
 	// Projects.
-	if err := common.InRange[int]("projects", len(m.Projects), 1, 30); err != nil {
+	if err := common.InRange("projects", len(m.Projects), 1, 30); err != nil {
 		return m, err
 	}
 
@@ -146,7 +146,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	}
 
 	// Funding channels.
-	if err := common.InRange[int]("funding.channels", len(m.Funding.Channels), 1, 10); err != nil {
+	if err := common.InRange("funding.channels", len(m.Funding.Channels), 1, 10); err != nil {
 		return m, err
 	}
 
@@ -168,7 +168,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	}
 
 	// Funding plans.
-	if err := common.InRange[int]("funding.plans", len(m.Funding.Plans), 1, 10); err != nil {
+	if err := common.InRange("funding.plans", len(m.Funding.Plans), 1, 10); err != nil {
 		return m, err
 	}
 	for n, o := range m.Funding.Plans {
@@ -179,7 +179,7 @@ func (s *Schema) Validate(m Manifest) (Manifest, error) {
 	}
 
 	// History.
-	if err := common.InRange[int]("history", len(m.Funding.Plans), 0, 50); err != nil {
+	if err := common.InRange("history", len(m.Funding.Plans), 0, 50); err != nil {
 		return m, err
 	}
 	for n, o := range m.Funding.History {
@@ -201,7 +201,7 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int]("entity.name", len(o.Name), 2, 250); err != nil {
+	if err := common.InRange("entity.name", len(o.Name), 2, 250); err != nil {
 		return o, err
 	}
 
@@ -215,7 +215,7 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 		}
 	}
 
-	if err := common.InRange[int]("entity.description", len(o.Description), 5, 2000); err != nil {
+	if err := common.InRange("entity.description", len(o.Description), 5, 2000); err != nil {
 		return o, err
 	}
 
@@ -237,11 +237,11 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%s].name", o.GUID), len(o.Name), 1, 250); err != nil {
+	if err := common.InRange(fmt.Sprintf("projects[%s].name", o.GUID), len(o.Name), 1, 250); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("projects[%s].description", o.GUID), len(o.Description), 5, 2000); err != nil {
+	if err := common.InRange(fmt.Sprintf("projects[%s].description", o.GUID), len(o.Description), 5, 2000); err != nil {
 		return o, err
 	}
 
@@ -264,13 +264,13 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 	}
 
 	// Licenses.
-	if err := common.InRange[int](fmt.Sprintf("projects[%s].licenses", o.GUID), len(o.Licenses), 1, 5); err != nil {
+	if err := common.InRange(fmt.Sprintf("projects[%s].licenses", o.GUID), len(o.Licenses), 1, 5); err != nil {
 		return o, err
 	}
 
 	licenseTag := fmt.Sprintf("projects[%s].licenses", o.GUID)
 	for _, l := range o.Licenses {
-		if err := common.InRange[int](licenseTag, len(l), 2, 64); err != nil {
+		if err := common.InRange(licenseTag, len(l), 2, 64); err != nil {
 			return o, err
 		}
 		if strings.HasPrefix(l, "spdx:") {
@@ -281,7 +281,7 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 	}
 
 	// Tags.
-	if err := common.InRange[int](fmt.Sprintf("projects[%s].tags", o.GUID), len(o.Tags), 1, 10); err != nil {
+	if err := common.InRange(fmt.Sprintf("projects[%s].tags", o.GUID), len(o.Tags), 1, 10); err != nil {
 		return o, err
 	}
 	for i, t := range o.Tags {
@@ -302,11 +302,11 @@ func (s *Schema) ValidateChannel(o Channel, n int) (Channel, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%s].address", o.GUID), len(o.Address), 0, 250); err != nil {
+	if err := common.InRange(fmt.Sprintf("channels[%s].address", o.GUID), len(o.Address), 0, 250); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("channels[%s].description", o.GUID), len(o.Description), 0, 500); err != nil {
+	if err := common.InRange(fmt.Sprintf("channels[%s].description", o.GUID), len(o.Description), 0, 500); err != nil {
 		return o, err
 	}
 
@@ -322,15 +322,15 @@ func (s *Schema) ValidatePlan(o Plan, n int, channelIDs map[string]struct{}) (Pl
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("plans[%s].name", o.GUID), len(o.Name), 3, 250); err != nil {
+	if err := common.InRange(fmt.Sprintf("plans[%s].name", o.GUID), len(o.Name), 3, 250); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("plans[%s].description", o.GUID), len(o.Description), 0, 500); err != nil {
+	if err := common.InRange(fmt.Sprintf("plans[%s].description", o.GUID), len(o.Description), 0, 500); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[float64](fmt.Sprintf("plans[%s].amount", o.GUID), o.Amount, 0, 1000000000); err != nil {
+	if err := common.InRange(fmt.Sprintf("plans[%s].amount", o.GUID), o.Amount, 0, 1000000000); err != nil {
 		return o, err
 	}
 
@@ -352,15 +352,15 @@ func (s *Schema) ValidatePlan(o Plan, n int, channelIDs map[string]struct{}) (Pl
 }
 
 func (s *Schema) ValidateHistory(o HistoryItem, n int) (HistoryItem, error) {
-	if err := common.InRange[int](fmt.Sprintf("history[%d].year", n), o.Year, 1970, 2075); err != nil {
+	if err := common.InRange(fmt.Sprintf("history[%d].year", n), o.Year, 1970, 2075); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[float64](fmt.Sprintf("history[%d].income", n), o.Income, 0, 1000000000); err != nil {
+	if err := common.InRange(fmt.Sprintf("history[%d].income", n), o.Income, 0, 1000000000); err != nil {
 		return o, err
 	}
 
-	if err := common.InRange[float64](fmt.Sprintf("history[%d].expenses", n), o.Expenses, 0, 1000000000); err != nil {
+	if err := common.InRange(fmt.Sprintf("history[%d].expenses", n), o.Expenses, 0, 1000000000); err != nil {
 		return o, err
 	}
 
@@ -368,7 +368,7 @@ func (s *Schema) ValidateHistory(o HistoryItem, n int) (HistoryItem, error) {
 		return o, err
 	}
 
-	if err := common.InRange[int](fmt.Sprintf("history[%d].description", n), len(o.Description), 0, 500); err != nil {
+	if err := common.InRange(fmt.Sprintf("history[%d].description", n), len(o.Description), 0, 500); err != nil {
 		return o, err
 	}
 
