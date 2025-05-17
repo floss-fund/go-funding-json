@@ -70,4 +70,11 @@ func TestWellKnownURL(t *testing.T) {
 	m = URL{URL: "https://github.com/user/project/blob/main/funding.json"}
 	assert.NoError(t, parseURL("", &m))
 	f(m, URL{URL: "https://github.com/user/project", WellKnown: "https://github.com/user/project/blob/main/.well-known/funding-manifest-urls"}, false)
+
+	// Special case where github.com/$user/$user is a special "root" repo where funding.json can be hosted,
+	// validating it for all github.com/$user/* repos.
+	m = URL{URL: "https://github.com/user/user/blob/main/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://github.com/user/project"}, false)
+
 }

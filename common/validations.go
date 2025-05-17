@@ -11,6 +11,7 @@ import (
 )
 
 const manifestFile = "funding.json"
+const githubHost = "github.com"
 
 var (
 	reTag   = regexp.MustCompile(`^\p{L}(?:[\p{L}\d]*(?:-[\p{L}\d]+)*)\p{L}$`)
@@ -115,6 +116,21 @@ func WellKnownURL(tag string, manifestURL *url.URL, target, wellKnown *url.URL, 
 		// The manifest path can be in a sub path of the target URL, or vice versa.
 		if strings.HasPrefix(tgPath, mfPath) || strings.HasPrefix(mfPath, tgPath) {
 			return false, nil
+		}
+
+		// Special case for github.com, where github.com/$user/$user is a special case repo where a single
+		// funding.json can be hosted, which can be considered valid for all github.com/$user/* repos.
+		if manifestURL.Host == githubHost && target.Host == githubHost {
+			// Get the username and repo name from the GitHub manifestURL and check if they're the same values.
+			// Eg: githuib.com/user/user -> user == user
+
+			parts := strings.Split(strings.TrimPrefix(mfPath, "/"), "/")
+			if len(parts) > 2 && parts[0] == parts[1] {
+				// Check if the target URI is a subpath of the /$user URI.
+				if strings.HasPrefix(tgPath, fmt.Sprintf("/%s/", parts[0])) {
+					return false, nil
+				}
+			}
 		}
 
 		return true, fmt.Errorf("%s.url and manifest URL host and paths do not match. Expected %s.wellKnown for provenance check at %s://%s%s/*%s", tag, tag, target.Scheme, target.Host, target.Path, wellKnownURI)
