@@ -14,7 +14,7 @@ const manifestFile = "funding.json"
 const githubHost = "github.com"
 
 var (
-	reTag   = regexp.MustCompile(`^\p{L}(?:[\p{L}\d]*(?:-[\p{L}\d]+)*)\p{L}$`)
+	reTag   = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 	reID    = regexp.MustCompile(`^[a-z0-9]([[a-z\d-]+)?[a-z0-9]$`)
 	rePhone = regexp.MustCompile(`^\+?(\d+-)*\d+$`)
 )
