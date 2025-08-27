@@ -25,56 +25,89 @@ func TestParseURL(t *testing.T) {
 }
 
 func TestWellKnownURL(t *testing.T) {
-	f := func(manifest URL, target URL, errExpected bool) {
+	f := func(manifest, target URL, expectedState common.WellKnownState, expectError bool) {
 		t.Helper()
 
 		assert.NoError(t, parseURL("", &target))
 
-		_, res := common.WellKnownURL("t", manifest.URLobj, target.URLobj, target.WellKnownObj, wURI)
-		if errExpected {
-			assert.Error(t, res)
+		result, err := common.WellKnownURL("t", manifest.URLobj, target.URLobj, target.WellKnownObj, wURI)
+		if expectError {
+			assert.Error(t, err)
 		} else {
-			assert.NoError(t, res)
+			assert.NoError(t, err)
 		}
+		assert.Equal(t, expectedState, result)
 	}
 
+	// Same host, manifest at root: wellKnown not required.
 	m := URL{URL: "https://floss.fund/funding.json"}
 	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://floss.fund"}, common.WellKnownNotRequired, false)
+	f(m, URL{URL: "https://floss.fund/project"}, common.WellKnownNotRequired, false)
+	f(m, URL{URL: "https://floss.fund/user/something/project"}, common.WellKnownNotRequired, false)
 
-	f(m, URL{URL: "https://floss.fund"}, false)
-	f(m, URL{URL: "https://floss.fund", WellKnown: "https://floss.fund/.well-known/funding-manifest-urls"}, false)
-	f(m, URL{URL: "https://floss.fund/sub/project", WellKnown: "https://floss.fund/.well-known/funding-manifest-urls"}, false)
-	f(m, URL{URL: "https://floss.fund/project"}, false)
-	f(m, URL{URL: "https://floss.fund/user/something/project"}, false)
+	// Same host with path matching: wellKnown not required.
+	m = URL{URL: "https://floss.fund/user/project/blob/main/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://floss.fund/user/project"}, common.WellKnownNotRequired, false)
 
 	m = URL{URL: "https://floss.fund/user/funding.json"}
 	assert.NoError(t, parseURL("", &m))
-	f(m, URL{URL: "https://floss.fund/project"}, true)
-	f(m, URL{URL: "https://floss.fund/user2/project"}, true)
-	f(m, URL{URL: "https://floss.fund/user/project"}, false)
-	f(m, URL{URL: "https://floss.fund/user/project/subproject"}, false)
+	f(m, URL{URL: "https://floss.fund/user/project"}, common.WellKnownNotRequired, false)
+	f(m, URL{URL: "https://floss.fund/user/project/subproject"}, common.WellKnownNotRequired, false)
 
-	m = URL{URL: "https://community.org/funding.json"}
+	// Same host with non-matching paths: wellKnown required.
+	m = URL{URL: "https://floss.fund/user/funding.json"}
 	assert.NoError(t, parseURL("", &m))
-	f(m, URL{URL: "https://project.net"}, true)
-	f(m, URL{URL: "https://project.community.org"}, true)
+	f(m, URL{URL: "https://floss.fund/project"}, common.WellKnownRequired, false)
+	f(m, URL{URL: "https://floss.fund/user2/project"}, common.WellKnownRequired, false)
+
+	// Different hosts: wellKnown required.
+	m = URL{URL: "https://example.com/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://www.example.com"}, common.WellKnownRequired, false)
+	f(m, URL{URL: "https://project.net"}, common.WellKnownRequired, false)
+	f(m, URL{URL: "https://project.example.com"}, common.WellKnownRequired, false)
 
 	m = URL{URL: "https://github.com/user/project/blob/main/funding.json"}
 	assert.NoError(t, parseURL("", &m))
-	f(m, URL{URL: "https://floss.fund/project"}, true)
-	f(m, URL{URL: "https://github.com/user/project2"}, true)
-	f(m, URL{URL: "https://github.com/user2/project"}, true)
-	f(m, URL{URL: "https://github.com/user/project"}, false)
-	f(m, URL{URL: "https://github.com/user/project/../../test"}, true)
+	f(m, URL{URL: "https://floss.fund/project"}, common.WellKnownRequired, false)
 
-	m = URL{URL: "https://github.com/user/project/blob/main/funding.json"}
-	assert.NoError(t, parseURL("", &m))
-	f(m, URL{URL: "https://github.com/user/project", WellKnown: "https://github.com/user/project/blob/main/.well-known/funding-manifest-urls"}, false)
-
-	// Special case where github.com/$user/$user is a special "root" repo where funding.json can be hosted,
-	// validating it for all github.com/$user/* repos.
+	// GitHub special case: wellKnown/$user/$user.
 	m = URL{URL: "https://github.com/user/user/blob/main/funding.json"}
 	assert.NoError(t, parseURL("", &m))
-	f(m, URL{URL: "https://github.com/user/project"}, false)
+	f(m, URL{URL: "https://github.com/user/project"}, common.WellKnownNotRequired, false)
 
+	m = URL{URL: "https://github.com/johndoe/johndoe/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://github.com/johndoe/awesome-project"}, common.WellKnownNotRequired, false)
+
+	m = URL{URL: "https://github.com/user/user/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://github.com/otheruser/project"}, common.WellKnownRequired, false)
+
+	// Well-known URL validation when provided.
+	m = URL{URL: "https://floss.fund/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://floss.fund", WellKnown: "https://floss.fund/.well-known/funding-manifest-urls"}, common.WellKnownNotRequired, false)
+	f(m, URL{URL: "https://floss.fund/sub/project", WellKnown: "https://floss.fund/.well-known/funding-manifest-urls"}, common.WellKnownNotRequired, false)
+
+	m = URL{URL: "https://floss.fund/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://example.com", WellKnown: "https://example.com/.well-known/funding-manifest-urls"}, common.WellKnownValid, false)
+	f(m, URL{URL: "https://example.com/sub/project", WellKnown: "https://example.com/.well-known/funding-manifest-urls"}, common.WellKnownValid, false)
+
+	// Invalid well-known URLs.
+	m = URL{URL: "https://floss.fund/user/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://other.com/project", WellKnown: "https://other.com/.well-known/wrong-suffix"}, common.WellKnownInvalid, true)
+	f(m, URL{URL: "https://project.net/path", WellKnown: "https://other.net/.well-known/funding-manifest-urls"}, common.WellKnownInvalid, true)
+	f(m, URL{URL: "https://other.com/project/path", WellKnown: "https://other.com/different/.well-known/funding-manifest-urls"}, common.WellKnownInvalid, true)
+
+	// Edge cases.
+	m = URL{URL: "https://github.com/user/project/blob/main/funding.json"}
+	assert.NoError(t, parseURL("", &m))
+	f(m, URL{URL: "https://github.com/user/project/../../test"}, common.WellKnownRequired, false)
+	f(m, URL{URL: "https://github.com/user2/project"}, common.WellKnownRequired, false)
+	f(m, URL{URL: "https://github.com/user/project2"}, common.WellKnownRequired, false)
 }

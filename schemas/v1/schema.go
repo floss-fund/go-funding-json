@@ -219,12 +219,12 @@ func (s *Schema) ValidateEntity(o Entity, manifest *url.URL) (Entity, error) {
 		return o, err
 	}
 
-	wkRequired, err := common.WellKnownURL("entity.webpageUrl", manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI)
-	if err != nil {
+	wkResult, err := common.WellKnownURL("entity.webpageUrl", manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI)
+	if err != nil && wkResult != common.WellKnownRequired {
 		return o, err
 	}
 
-	if !wkRequired {
+	if wkResult == common.WellKnownNotRequired {
 		o.WebpageURL.WellKnownObj = nil
 		o.WebpageURL.WellKnown = ""
 	}
@@ -245,20 +245,20 @@ func (s *Schema) ValidateProject(o Project, n int, manifest *url.URL) (Project, 
 		return o, err
 	}
 
-	wkRequired, err := common.WellKnownURL(fmt.Sprintf("projects[%s].webpageUrl", o.GUID), manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI)
-	if err != nil {
+	wkResult, err := common.WellKnownURL(fmt.Sprintf("projects[%s].webpageUrl", o.GUID), manifest, o.WebpageURL.URLobj, o.WebpageURL.WellKnownObj, s.opt.WellKnownURI)
+	if err != nil && wkResult != common.WellKnownRequired {
 		return o, err
 	}
-	if !wkRequired {
+	if wkResult == common.WellKnownNotRequired {
 		o.WebpageURL.WellKnownObj = nil
 		o.WebpageURL.WellKnown = ""
 	}
 
-	wkRequired, err = common.WellKnownURL(fmt.Sprintf("projects[%s].repositoryUrl", o.GUID), manifest, o.RepositoryURL.URLobj, o.RepositoryURL.WellKnownObj, s.opt.WellKnownURI)
-	if err != nil {
+	wkResult, err = common.WellKnownURL(fmt.Sprintf("projects[%s].repositoryUrl", o.GUID), manifest, o.RepositoryURL.URLobj, o.RepositoryURL.WellKnownObj, s.opt.WellKnownURI)
+	if err != nil && wkResult != common.WellKnownRequired {
 		return o, err
 	}
-	if !wkRequired {
+	if wkResult == common.WellKnownNotRequired {
 		o.RepositoryURL.WellKnownObj = nil
 		o.RepositoryURL.WellKnown = ""
 	}
