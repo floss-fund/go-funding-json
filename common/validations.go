@@ -56,7 +56,7 @@ func MaxItems[T ~[]E, E any](tag string, set T, max int) error {
 }
 
 func IsEmail(tag, s string, maxLen int) error {
-	if err := InRange[int](tag, len(s), 3, maxLen); err != nil {
+	if err := InRange(tag, len(s), 3, maxLen); err != nil {
 		return err
 	}
 
@@ -69,7 +69,7 @@ func IsEmail(tag, s string, maxLen int) error {
 }
 
 func IsURL(tag, u string, maxLen int) (*url.URL, error) {
-	if err := InRange[int](tag, len(u), 10, maxLen); err != nil {
+	if err := InRange(tag, len(u), 10, maxLen); err != nil {
 		return nil, err
 	}
 
@@ -168,7 +168,7 @@ func WellKnownURL(tag string, manifestURL *url.URL, target, wellKnown *url.URL, 
 }
 
 func IsRepoURL(tag, u string) error {
-	if err := InRange[int](tag, len(u), 8, 1024); err != nil {
+	if err := InRange(tag, len(u), 8, 1024); err != nil {
 		return err
 	}
 
@@ -181,7 +181,7 @@ func IsRepoURL(tag, u string) error {
 }
 
 func IsTag(tag string, val string, min, max int) error {
-	if err := InRange[int](tag, len(val), min, max); err != nil {
+	if err := InRange(tag, len(val), min, max); err != nil {
 		return err
 	}
 
@@ -193,7 +193,7 @@ func IsTag(tag string, val string, min, max int) error {
 }
 
 func IsID(tag string, val string, min, max int) error {
-	if err := InRange[int](tag, len(val), min, max); err != nil {
+	if err := InRange(tag, len(val), min, max); err != nil {
 		return err
 	}
 
