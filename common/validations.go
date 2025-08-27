@@ -13,6 +13,23 @@ import (
 const manifestFile = "funding.json"
 const githubHost = "github.com"
 
+// WellKnownState represents the outcome of wellKnown URL validation.
+type WellKnownState string
+
+const (
+	// WellKnownNotRequired indicates the URL is verified without needing a wellKnown URL.
+	WellKnownNotRequired WellKnownState = "not_required"
+
+	// WellKnownRequired indicates a wellKnown URL is required but was not provided.
+	WellKnownRequired = "required"
+
+	// WellKnownValid indicates the provided wellKnown URL is valid.
+	WellKnownValid = "valid"
+
+	// WellKnownInvalid indicates the provided wellKnown URL has errors.
+	WellKnownInvalid = "invalid"
+)
+
 var (
 	reTag   = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 	reID    = regexp.MustCompile(`^[a-z0-9]([[a-z\d-]+)?[a-z0-9]$`)
@@ -86,63 +103,75 @@ func IsURL(tag, u string, maxLen int) (*url.URL, error) {
 	return p, nil
 }
 
-// WellKnownURL checks a given targetURL against the given root manifestURL. If the target host
-// is not the same as the manifest host, or if the target path is not equal to, or is a subpath, of the manifest path,
-// then a wellknown URL is expected at the manifest host. The bool indicates whether a wellKnown is required at all or not.
-func WellKnownURL(tag string, manifestURL *url.URL, target, wellKnown *url.URL, wellKnownURI string) (bool, error) {
-	// If there's a manifestURL, then targetURL should be on the same domain. Otherwise, a well-known URL is mandatory.
-	if manifestURL.Host != target.Host && wellKnown == nil {
-		return true, fmt.Errorf("%s.url and manifest URL host and paths do not match. Expected %s.wellKnown for provenance check at %s://%s%s/*%s", tag, tag, target.Scheme, target.Host, target.Path, wellKnownURI)
+// isWellKnownRequired checks if a wellKnown URL is required based on manifest and target URLs
+func isWellKnownRequired(manifestURL, target *url.URL, mfPath, tgPath string) bool {
+	// Different hosts always require wellKnown
+	if manifestURL.Host != target.Host {
+		return true
 	}
 
+	// manifest is in the root of the domain, so all sub-paths are verified.
+	//  eg: site.com/funding.json ~= site.com/project
+	if mfPath == "/" {
+		return false
+	}
+
+	// eg: github.com/user/project/blob/main/funding.json  ~= github.com/user/project
+	//     /user/project/blob/main/                        ~= /user/project/
+	// eg: site.com/project/files/funding.json             ~= site.com/project
+	//     /project/files/                                 ~= /project/
+	// The manifest path can be in a sub path of the target URL, or vice versa.
+	if strings.HasPrefix(tgPath, mfPath) || strings.HasPrefix(mfPath, tgPath) {
+		return false
+	}
+
+	// Special case for github.com, where github.com/$user/$user is a special case repo where a single
+	// funding.json can be hosted, which can be considered valid for all github.com/$user/* repos.
+	if manifestURL.Host == githubHost && target.Host == githubHost {
+		// Get the username and repo name from the GitHub manifestURL and check if they're the same values.
+		// Eg: github.com/user/user -> user == user
+		parts := strings.Split(strings.TrimPrefix(mfPath, "/"), "/")
+		if len(parts) > 2 && parts[0] == parts[1] {
+			// Check if the target URI is a subpath of the /$user URI.
+			if strings.HasPrefix(tgPath, fmt.Sprintf("/%s/", parts[0])) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// WellKnownURL checks a given targetURL against the given root manifestURL and validates
+// the wellKnown URL if provided. Returns the validation result and any error.
+func WellKnownURL(tag string, manifestURL *url.URL, target, wellKnown *url.URL, wellKnownURI string) (WellKnownState, error) {
 	var (
-		// Get the paths are suffix them with "/" for checking using HasPrefix later.
+		// Get the paths and suffix them with "/" for checking using HasPrefix later.
 		mfPath = strings.TrimSuffix(strings.TrimSuffix(manifestURL.Path, manifestFile), "/") + "/"
 		tgPath = strings.TrimSuffix(target.Path, "/") + "/"
 	)
 
-	// If the host + paths match, provenance is verified by default and there is no need for wellKnown.
-	if manifestURL.Host == target.Host && wellKnown == nil {
-		// manfiest is in the root of the domain, so all sub-paths are verified.
-		//  eg: site.com/funding.json ~= site.com/project
-		if mfPath == "/" {
-			return false, nil
-		}
+	// Check if wellKnown is required based on host and path matching.
+	isRequired := isWellKnownRequired(manifestURL, target, mfPath, tgPath)
 
-		// eg: github.com/user/project/blob/main/funding.json  ~= github.com/user/project
-		//     /user/project/blob/main/                        ~= /user/project/
-		// eg: site.com/project/files/funding.json             ~= site.com/project
-		//     /project/files/                                 ~= /project/
-		// The manifest path can be in a sub path of the target URL, or vice versa.
-		if strings.HasPrefix(tgPath, mfPath) || strings.HasPrefix(mfPath, tgPath) {
-			return false, nil
-		}
-
-		// Special case for github.com, where github.com/$user/$user is a special case repo where a single
-		// funding.json can be hosted, which can be considered valid for all github.com/$user/* repos.
-		if manifestURL.Host == githubHost && target.Host == githubHost {
-			// Get the username and repo name from the GitHub manifestURL and check if they're the same values.
-			// Eg: githuib.com/user/user -> user == user
-
-			parts := strings.Split(strings.TrimPrefix(mfPath, "/"), "/")
-			if len(parts) > 2 && parts[0] == parts[1] {
-				// Check if the target URI is a subpath of the /$user URI.
-				if strings.HasPrefix(tgPath, fmt.Sprintf("/%s/", parts[0])) {
-					return false, nil
-				}
-			}
-		}
-
-		return true, fmt.Errorf("%s.url and manifest URL host and paths do not match. Expected %s.wellKnown for provenance check at %s://%s%s/*%s", tag, tag, target.Scheme, target.Host, target.Path, wellKnownURI)
+	// If wellKnown is not required.
+	if !isRequired {
+		return WellKnownNotRequired, nil
 	}
 
+	// wellKnown is required but not provided.
+	if wellKnown == nil {
+		return WellKnownRequired, nil
+	}
+
+	// Validate the provided wellKnown URL.
 	if !strings.HasSuffix(wellKnown.Path, wellKnownURI) {
-		return true, fmt.Errorf("`%s.wellKnown` should end in %s", tag, wellKnownURI)
+		return WellKnownInvalid, fmt.Errorf("`%s.wellKnown` should end in %s", tag, wellKnownURI)
 	}
 
-	// well-known URL should match the main URL.
+	// wellKnown URL should match the main URL.
 	if wellKnown.Host != target.Host {
-		return true, fmt.Errorf("%s.url and `%s.wellKnown` hostnames do not match", tag, tag)
+		return WellKnownInvalid, fmt.Errorf("%s.url and `%s.wellKnown` hostnames do not match", tag, tag)
 	}
 
 	var (
@@ -152,19 +181,19 @@ func WellKnownURL(tag string, manifestURL *url.URL, target, wellKnown *url.URL, 
 
 	// If wellKnown is at the root of the host, then all sub-paths are acceptable.
 	if isWKRoot {
-		return true, nil
+		return WellKnownValid, nil
 	}
 
-	// If it's not at the root, then basePath should be a suffix of the well known path.
+	// If it's not at the root, then basePath should be a prefix of the well known path.
 	// eg:
-	// github.com/user ~= github.com/user/project/blob/main/.well-known/funding-manifest-urls
-	// github.com/user/project ~= github.com/user/project/blob/main/.well-known/funding-manifest-urls
-	// github.com/use !~= github.com/user/project/blob/main/.well-known/funding-manifest-urls
+	// github.com/user ~= github.com/user/project/blob/main/.wellKnown/funding-manifest-urls
+	// github.com/user/project ~= github.com/user/project/blob/main/.wellKnown/funding-manifest-urls
+	// github.com/use !~= github.com/user/project/blob/main/.wellKnown/funding-manifest-urls
 	if tgPath != "/" && !strings.HasPrefix(wkPath, tgPath) {
-		return true, fmt.Errorf("%s.url and manifest URL host and paths do not match. Expected %s.wellKnown for provenance check at %s://%s%s/*%s", tag, tag, target.Scheme, target.Host, target.Path, wellKnownURI)
+		return WellKnownInvalid, fmt.Errorf("%s.url and manifest URL host and paths do not match. Expected %s.wellKnown for provenance check at %s://%s%s/*%s", tag, tag, target.Scheme, target.Host, target.Path, wellKnownURI)
 	}
 
-	return true, nil
+	return WellKnownValid, nil
 }
 
 func IsRepoURL(tag, u string) error {
