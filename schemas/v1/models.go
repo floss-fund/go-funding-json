@@ -14,8 +14,8 @@ var (
 
 //easyjson:json
 type URL struct {
-	URL       string `json:"url"`
-	WellKnown string `json:"wellKnown,omitempty"`
+	URL       string `json:"url" db:"url"`
+	WellKnown string `json:"wellKnown,omitempty" db:"wellKnown"`
 
 	// Parsed URLs.
 	URLobj       *url.URL `json:"-" db:"-"`
@@ -26,26 +26,26 @@ type URL struct {
 //
 //easyjson:json
 type Entity struct {
-	Type        string `json:"type"`
-	Role        string `json:"role"`
-	Name        string `json:"name"`
-	Email       string `json:"email"`
-	Phone       string `json:"phone"`
-	Description string `json:"description"`
-	WebpageURL  URL    `json:"webpageUrl"`
+	Type        string `json:"type" db:"type"`
+	Role        string `json:"role" db:"role"`
+	Name        string `json:"name" db:"name"`
+	Email       string `json:"email" db:"email"`
+	Phone       string `json:"phone" db:"phone"`
+	Description string `json:"description" db:"description"`
+	WebpageURL  URL    `json:"webpageUrl" db:"webpageUrl"`
 }
 
 // Project represents a FOSS project.
 //
 //easyjson:json
 type Project struct {
-	GUID          string   `json:"guid"`
-	Name          string   `json:"name"`
-	Description   string   `json:"description"`
-	WebpageURL    URL      `json:"webpageUrl"`
-	RepositoryURL URL      `json:"repositoryUrl"`
-	Licenses      []string `json:"licenses"`
-	Tags          []string `json:"tags"`
+	GUID          string   `json:"guid" db:"guid"`
+	Name          string   `json:"name" db:"name"`
+	Description   string   `json:"description" db:"description"`
+	WebpageURL    URL      `json:"webpageUrl" db:"webpageUrl"`
+	RepositoryURL URL      `json:"repositoryUrl" db:"repositoryUrl"`
+	Licenses      []string `json:"licenses" db:"licenses"`
+	Tags          []string `json:"tags" db:"tags"`
 }
 
 //easyjson:json
@@ -55,10 +55,10 @@ type Projects []Project
 //
 //easyjson:json
 type Channel struct {
-	GUID        string `json:"guid"`
-	Type        string `json:"type"`
-	Address     string `json:"address"`
-	Description string `json:"description"`
+	GUID        string `json:"guid" db:"guid"`
+	Type        string `json:"type" db:"type"`
+	Address     string `json:"address" db:"address"`
+	Description string `json:"description" db:"description"`
 }
 
 // easyjson:json
@@ -68,14 +68,14 @@ type Channels []Channel
 //
 //easyjson:json
 type Plan struct {
-	GUID        string   `json:"guid"`
-	Status      string   `json:"status"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Amount      float64  `json:"amount"`
-	Currency    string   `json:"currency"`
-	Frequency   string   `json:"frequency"`
-	Channels    []string `json:"channels"`
+	GUID        string   `json:"guid" db:"guid"`
+	Status      string   `json:"status" db:"status"`
+	Name        string   `json:"name" db:"name"`
+	Description string   `json:"description" db:"description"`
+	Amount      float64  `json:"amount" db:"amount"`
+	Currency    string   `json:"currency" db:"currency"`
+	Frequency   string   `json:"frequency" db:"frequency"`
+	Channels    []string `json:"channels" db:"channels"`
 }
 
 // easyjson:json
@@ -85,12 +85,12 @@ type Plans []Plan
 //
 //easyjson:json
 type HistoryItem struct {
-	Year        int     `json:"year"`
-	Income      float64 `json:"income"`
-	Expenses    float64 `json:"expenses"`
-	Taxes       float64 `json:"taxes"`
-	Currency    string  `json:"currency"`
-	Description string  `json:"description"`
+	Year        int     `json:"year" db:"year"`
+	Income      float64 `json:"income" db:"income"`
+	Expenses    float64 `json:"expenses" db:"expenses"`
+	Taxes       float64 `json:"taxes" db:"taxes"`
+	Currency    string  `json:"currency" db:"currency"`
+	Description string  `json:"description" db:"description"`
 }
 
 // easyjson:json
@@ -98,9 +98,9 @@ type History []HistoryItem
 
 // easyjson:json
 type Funding struct {
-	Channels Channels `json:"channels"`
-	Plans    Plans    `json:"plans"`
-	History  History  `json:"history"`
+	Channels Channels `json:"channels" db:"channels"`
+	Plans    Plans    `json:"plans" db:"plans"`
+	History  History  `json:"history" db:"history"`
 }
 
 //easyjson:json
@@ -108,8 +108,8 @@ type Manifest struct {
 	// This is added internally and is not expected in the manifest itself.
 	URL URL `json:"-" db:"-"`
 
-	Version  string   `json:"version"`
-	Entity   Entity   `json:"entity"`
-	Projects Projects `json:"projects"`
-	Funding  Funding  `json:"funding"`
+	Version  string   `json:"version" db:"version"`
+	Entity   Entity   `json:"entity" db:"entity"`
+	Projects Projects `json:"projects" db:"projects"`
+	Funding  Funding  `json:"funding" db:"funding"`
 }
